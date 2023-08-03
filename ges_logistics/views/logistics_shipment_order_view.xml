@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!--Actions-->
+        <record id="logistics_shipment_order_act_window" model="ir.actions.act_window">
+            <field name="name">Shipment Orders</field>
+            <field name="res_model">logistics.shipment.order</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="domain">[]</field>
+        </record>
+
+
+        <!--Views-->
+
+        <record id="logistics_shipment_order_list_view" model="ir.ui.view">
+            <field name="name">logistics.shipment.order.list.view</field>
+            <field name="model">logistics.shipment.order</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="direction"/>
+                    <field name="transport"/>
+                </tree>
+            </field>
+        </record>
+        
+        <record id="logistics_shipment_order_form_view" model="ir.ui.view">
+            <field name="name">logistics.shipment.order.form.view</field>
+            <field name="model">logistics.shipment.order</field>
+            <field name="arch" type="xml">
+             
+                <form>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_quotations" type="object" class="oe_stat_button" icon="fa-shopping-cart"  attrs="{'invisible': [['so_ids_count','=',0]]}">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="so_ids_amount_total" widget="monetary" modifiers="{'readonly': true}" options="{'currency_field': 'currency_id'}" />
+                                        <field name="currency_id" invisible="1"/>
+                                        <field name="so_ids_count" invisible="1"/>
+                                    </span>
+                                    <span class="o_stat_text">
+                                        Sales
+                                    </span>
+                                </div>
+                            </button>
+                            <button name="action_view_so" type="object" class="oe_stat_button" icon="fa-envelope"  attrs="{'invisible': [['quotation_ids_count','=',0]]}">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="quotation_ids_amount_total" widget="monetary" modifiers="{'readonly': true}" options="{'currency_field': 'currency_id'}" />
+                                        <field name="currency_id" invisible="1"/>
+                                        <field name="quotation_ids_count" invisible="1"/>
+                                    </span>
+                                    <span class="o_stat_text">
+                                        Quotations
+                                    </span>
+                                </div>
+                            </button>
+                        </div>
+                        <field name="active" invisible="1" />
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger" attrs="{'invisible': [('active', '=', True)]}" modifiers="{'invisible': [['active', '=', true]]}" />
+                        <div class="oe_title mb12">
+                            <h1>
+                                <field class="text-break" name="name" default_focus="1" readonly="1"/>
+                            </h1>
+                        </div>
+                        <div class="row g-0">
+                            <div class="col-11 col-lg-11 col-md-11 col-12 g-0 pr-4">
+                                <div  class="row p-4 g-0 " style="background-color: #f2f2f2; border: 1px solid #dee2e6;">
+                                    <div class="col">
+                                        <div>
+                                            <span style="color:gray">Shipper</span>
+                                        </div>
+                                        <div class="fa fa-industry" style="font-size: 20px;"/>
+                                        <div>
+                                            <span>
+                                                <field name="shipper_id" id="shipper_id_infographic" readonly="1" nolabel="1" style="white-space: nowrap; font-size: small" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div>
+                                            <span style="color:gray">From</span>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                <field name="origin_main_carriage_country_id" style="white-space: nowrap; font-size: small" attrs="{'invisible': [('origin_main_carriage_port_id','!=',False)]}" readonly="1" nolabel="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                                <field name="origin_main_carriage_port_id" style="white-space: nowrap; font-size: small" attrs="{'invisible': [('origin_main_carriage_port_id','=',False)]}" readonly="1" nolabel="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col" style="text-align: center !important">
+                                        <div>
+                                            <span style="color:gray">Via</span>
+                                        </div>
+                                        <div class="fa fa-ship" style="font-size: 20px;" attrs="{'invisible': [('transport','!=','ocean')]}"/>
+                                        <div class="fa fa-plane" style="font-size: 20px;" attrs="{'invisible': [('transport','!=','air')]}"/>
+                                        <div class="fa fa-train" style="font-size: 20px;" attrs="{'invisible': [('transport','!=','rail')]}"/>
+                                        <div class="fa fa-truck" style="font-size: 20px;" attrs="{'invisible': [('transport','!=','road')]}"/>
+                                        <div>
+                                            <span>
+                                                <field name="transport" readonly="1" nolabel="1"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col" style="text-align: right !important">
+                                        <div>
+                                            <span style="color:gray">To</span>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                <field name="destination_main_carriage_country_id" style="white-space: nowrap; font-size: small" attrs="{'invisible': [('destination_main_carriage_port_id','!=',False)]}" readonly="1" nolabel="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                                <field name="destination_main_carriage_port_id" style="white-space: nowrap; font-size: small" attrs="{'invisible': [('destination_main_carriage_port_id','=',False)]}" readonly="1" nolabel="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="col" style="text-align: right !important">
+                                        <div class="text-right">
+                                            <span style="color:gray">Consignee</span>
+                                        </div>
+                                        <div class="fa fa-flip-horizontal fa-industry" style="font-size: 20px;"/>
+                                        <div>
+                                            <span>
+                                                <field name="consignee_id" id="consignee_id_infographic" readonly="1" nolabel="1" style=" white-space: nowrap; font-size: small" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-1 col-md-1 col-12">
+                                <div class="row g-0 h-100" style="background-color: #f2f2f2; border: 1px solid #dee2e6;">
+                                    <div class="col" style="margin:auto; text-align:center">
+                                        <div>
+                                            <field name="direction" id="direction_infographic" readonly="1" nolabel="1" style="white-space: nowrap;"/>                                    
+                                        </div>
+                                        <div style="font-weight: 900;">
+                                            <field name="incoterms_id" readonly="1" nolabel="1"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                        <group>
+                            <group string="Customer">
+                                <label for="customer_id"/>
+                                <div>
+                                    <field name="customer_id"/>
+                                    <field name="customer_email"/>
+                                    <field name="customer_phone"/>
+                                    <field name="customer_mobile"/>
+                                </div>
+                                <field name="is_customer_agent"/>
+                            </group>
+                            <group string="Transport Details">
+                                <field name="direction" widget="radio" required="1" options="{'horizontal': true}"/>
+                                <field name="transport" widget="radio" required="1" options="{'horizontal': true}"/>
+                                <field name="ocean_shipment_type" attrs="{'invisible': [('transport','!=','ocean')],'required':[('transport','=','ocean')]}"/>
+                                <field name="air_shipment_type" attrs="{'invisible': [('transport','!=','air')],'required':[('transport','=','air')]}"/>
+                                <field name="road_shipment_type" attrs="{'invisible': [('transport','!=','road')],'required':[('transport','=','road')]}"/>
+                                <field name="rail_shipment_type" attrs="{'invisible': [('transport','!=','rail')],'required':[('transport','=','rail')]}"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="Shipper">
+                                <label for="shipper_id"/>
+                                <div>
+                                    <field name="shipper_id"/>
+                                    <field name="shipper_email"/>
+                                    <field name="shipper_phone"/>
+                                    <field name="shipper_mobile"/>
+                                </div>
+                            </group>
+                            <group string="Consignee">
+                                <label for="consignee_id"/>
+                                <div>
+                                    <field name="consignee_id"/>
+                                    <field name="consignee_email"/>
+                                    <field name="consignee_phone"/>
+                                    <field name="consignee_mobile"/>
+                                </div>
+                            </group>
+                        </group>
+                        <group string="Main Carriage">
+                            <group string="Origin">
+                                <field name="origin_main_carriage_country_id" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <label for="origin_main_carriage_port_id_ocean_air_rail" string="Loading Port" attrs="{'invisible': [('transport','!=','ocean')]}"/>
+                                <label for="origin_main_carriage_port_id_ocean_air_rail" string="Gateway" attrs="{'invisible': [('transport','!=','air')]}"/>
+                                <label for="origin_main_carriage_port_id_ocean_air_rail" string="Loading Terminal" attrs="{'invisible': [('transport','!=','rail')]}"/>
+                                <label for="origin_main_carriage_address_id_road" string="Loading Location" attrs="{'invisible': [('transport','!=','road')]}"/>
+                                <div attrs="{'invisible': [('transport','not in',('ocean','air','rail'))]}">
+                                    <field name="origin_main_carriage_port_id" id="origin_main_carriage_port_id_ocean_air_rail" options="{'no_quick_create': True, 'no_create': True}"/>
+                                </div>
+                                <div attrs="{'invisible': [('transport','!=','road')]}">
+                                    <field name="origin_main_carriage_address_id" id="origin_main_carriage_address_id_road" options="{'no_quick_create': True, 'no_create': True}"/>
+                                </div>
+                                <field name="origin_main_carriage_address_save_option" attrs="{'invisible': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','not in',('ocean','air','rail')),('origin_main_carriage_address_id','!=',False)]}"/>
+                                <field name="origin_main_carriage_address_name" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)], 'required': [('origin_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_code" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)], 'required': [('origin_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_country_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))], 'required': [('origin_main_carriage_address_save_option','=',True)]}" readonly="1" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_state_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_city_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)], 'required': [('origin_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_zip_code" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_street" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)], 'required': [('origin_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_street2" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_main_carriage_address_street3" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('origin_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                
+                            </group>
+                            <group string="Destination">
+                                <field name="destination_main_carriage_country_id" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <label for="destination_main_carriage_port_id_ocean_air_rail" string="Discharge Port" attrs="{'invisible': [('transport','!=','ocean')]}"/>
+                                <label for="destination_main_carriage_port_id_ocean_air_rail" string="Destination" attrs="{'invisible': [('transport','!=','air')]}"/>
+                                <label for="destination_main_carriage_port_id_ocean_air_rail" string="Discharge Terminal" attrs="{'invisible': [('transport','!=','rail')]}"/>
+                                <label for="destination_main_carriage_address_id_road" string="Discharge Location" attrs="{'invisible': [('transport','!=','road')]}"/>
+                                <div attrs="{'invisible': [('transport','not in',('ocean','air','rail'))]}">
+                                    <field name="destination_main_carriage_port_id" id="destination_main_carriage_port_id_ocean_air_rail" options="{'no_quick_create': True, 'no_create': True}"/>
+                                </div>
+                                <div attrs="{'invisible': [('transport','!=','road')]}">
+                                    <field name="destination_main_carriage_address_id" id="destination_main_carriage_address_id_road" options="{'no_quick_create': True, 'no_create': True}"/>
+                                </div>
+                                <field name="destination_main_carriage_address_save_option" attrs="{'invisible': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','not in',('ocean','air','rail')),('destination_main_carriage_address_id','!=',False)]}"/>
+                                <field name="destination_main_carriage_address_name" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)], 'required': [('destination_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_code" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)], 'required': [('destination_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_country_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))], 'required': [('destination_main_carriage_address_save_option','=',True)]}" readonly="1" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_state_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_city_id" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)], 'required': [('destination_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_zip_code" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_street" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)], 'required': [('destination_main_carriage_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_street2" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_main_carriage_address_street3" attrs="{'invisible': [('transport','not in',('ocean','air','road','rail'))],'readonly': ['|',('transport','in',('ocean','air','rail')),'&amp;',('transport','=','road'),('destination_main_carriage_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                
+                            </group>
+                        </group>
+                        <group string="Other Routes">
+                            <group string="Pre-Carriage">
+                                <field name="pickup_option" attrs="{'invisible': [('transport','not in',('ocean','air','rail'))]}"/>
+                                <field name="origin_pickup_country_id" string="Pick-Up Country" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)]}" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_id" string="Named Address" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)]}" options="{'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_save_option" attrs="{'invisible': ['|',('pickup_option','=',False),('origin_pickup_address_id','!=',False)]}"/>
+                                <field name="origin_pickup_address_name" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)], 'required': [('origin_pickup_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_code" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)], 'required': [('origin_pickup_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_country_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)], 'required': [('origin_pickup_address_save_option','=',True)]}" readonly="1" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_state_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_city_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)], 'required': [('origin_pickup_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_zip_code" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_street" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)], 'required': [('origin_pickup_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_street2" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="origin_pickup_address_street3" attrs="{'invisible': ['&amp;',('transport','!=','road'),('pickup_option','=',False)],'readonly': [('origin_pickup_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                
+                            </group>
+                            <group string="On-Carriage">
+                                <field name="delivery_option" attrs="{'invisible': [('transport','not in',('ocean','air','rail'))]}" />
+                                <field name="destination_delivery_country_id" string="Delivery Country" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)]}" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_id" string="Named Address" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)]}" options="{'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_save_option" attrs="{'invisible': ['|',('delivery_option','=',False),('destination_delivery_address_id','!=',False)]}"/>
+                                <field name="destination_delivery_address_name" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)], 'required': [('destination_delivery_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_code" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)], 'required': [('destination_delivery_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_country_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)], 'required': [('destination_delivery_address_save_option','=',True)]}" readonly="1" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_state_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_city_id" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)], 'required': [('destination_delivery_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_zip_code" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_street" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)], 'required': [('destination_delivery_address_save_option','=',True)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_street2" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                <field name="destination_delivery_address_street3" attrs="{'invisible': ['&amp;',('transport','!=','road'),('delivery_option','=',False)],'readonly': [('destination_delivery_address_id','!=',False)]}" force_save="1" options="{'no_open': True, 'no_quick_create': True, 'no_create': True}"/>
+                                
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="General Information">
+                                <group string="Tracking Details">
+                                    <field name="tracking_number"/>
+                                </group>
+                            </page>
+                            <page string="Agent">
+                                <group>                
+                                    <field name="agent_id"/>
+                                    <field name="agent_email"/>
+                                    <field name="agent_phone"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>                
+                </form>
+            </field>
+        </record>
+
+       
+    </data>
+</odoo>

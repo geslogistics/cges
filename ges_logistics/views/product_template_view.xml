@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Views -->
+        <record id="product_template_form_view_logistics" model="ir.ui.view">
+            <field name="name">product.template.form.view.logistics</field>
+            <field name="model">product.template</field>
+            <field name="inherit_id" ref="product.product_template_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet[@name='product_form']/div[@name='options']/span[last()]" position="after">
+                    <span class="d-inline-block">
+                        <field name="is_logistics"/>
+                        <label for="is_logistics"/>
+                    </span>
+                </xpath>
+
+                <xpath expr="//sheet[@name='product_form']/notebook/page[last()]" position="after">
+                    <page name="logistics_tab" string="Logistics" attrs="{'invisible':[('is_logistics','=',False)]}">
+                        <group>
+                            <group>
+                                <field name="sale_order_line_workflow" widget="selection"/>
+                                <field name="product_group_id" widget="selection" />
+                                <field name="freight_type_id" widget="selection" />
+                                <field name="shipment_type_id" widget="selection" />
+                            </group>
+                        </group>
+                    </page>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="logistics_product_product_group_list_view" model="ir.ui.view">
+            <field name="name">logistics.product.product.group.list.view</field>
+            <field name="model">logistics.product.product.group</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="product_group_category"/>
+                </tree>
+            </field>
+        </record>
+        <record id="logistics_product_product_group_form_view" model="ir.ui.view">
+            <field name="name">logistics.product.product.group.form.view</field>
+            <field name="model">logistics.product.product.group</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="product_group_category" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="logistics_product_freight_type_list_view" model="ir.ui.view">
+            <field name="name">logistics.product.freight.type.list.view</field>
+            <field name="model">logistics.product.freight.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                        <field name="name"/>
+                        <field name="freight_type_category"/>
+                        <field name="product_group_id"/>
+                </tree>
+            </field>
+        </record>
+        <record id="logistics_product_freight_type_form_view" model="ir.ui.view">
+            <field name="name">logistics.product.freight.type.form.view</field>
+            <field name="model">logistics.product.freight.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="freight_type_category" widget="radio" options="{'horizontal': true}"/>
+                            <field name="product_group_id" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="logistics_product_shipment_type_list_view" model="ir.ui.view">
+            <field name="name">logistics.product.shipment.type.list.view</field>
+            <field name="model">logistics.product.shipment.type</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="shipment_type_category"/>
+                    <field name="freight_type_id"/>
+                </tree>
+            </field>
+        </record>
+        <record id="logistics_product_shipment_type_form_view" model="ir.ui.view">
+            <field name="name">logistics.product.shipment.type.form.view</field>
+            <field name="model">logistics.product.shipment.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="shipment_type_category" widget="radio" options="{'horizontal': true}"/>
+                            <field name="freight_type_id" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Actions -->
+
+        <record id="logistics_product_product_group_action" model="ir.actions.act_window">
+            <field name="name">Product Groups</field>
+            <field name="res_model">logistics.product.product.group</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+        </record>
+
+        <record id="logistics_product_freight_type_action" model="ir.actions.act_window">
+            <field name="name">Freight Types</field>
+            <field name="res_model">logistics.product.freight.type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+        </record>
+
+        <record id="logistics_product_shipment_type_action" model="ir.actions.act_window">
+            <field name="name">Shipment Types</field>
+            <field name="res_model">logistics.product.shipment.type</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context">{}</field>
+        </record>
+
+        <record id="logistics_product_products_act_window" model="ir.actions.act_window" >
+            <field name="name">Products</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{"default_is_logistics":True, "default_detailed_type":"service"}</field>
+            <field name="domain">[("is_logistics","=",True)]</field>
+        </record>
+   
+    </data>
+</odoo>
