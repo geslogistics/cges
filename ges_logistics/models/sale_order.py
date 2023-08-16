@@ -48,10 +48,116 @@ class SaleOrderLine(models.Model):
                 'res_id': newtr.id,
                 'target': 'current',
                 }
-                
+            
             elif self.product_template_id.sale_order_line_workflow == 'storage':
-                self.reference_document = '%s,%s'% ('logistics.storage.order',self.env['logistics.storage.order'].create({}).id)
+                
+                newtr = self.env['logistics.storage.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.storage.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Storage Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.storage.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
             elif self.product_template_id.sale_order_line_workflow == 'customs':
-                self.reference_document = '%s,%s'% ('logistics.customs.order',self.env['logistics.customs.order'].create({}).id)
+                
+                newtr = self.env['logistics.customs.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.customs.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Customs Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.customs.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
             elif self.product_template_id.sale_order_line_workflow == 'service':
-                self.reference_document = '%s,%s'% ('logistics.service.order',self.env['logistics.service.order'].create({}).id)
+                
+                newtr = self.env['logistics.service.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.service.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Service Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.service.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
+    def select_reference_document(self):
+        if self.product_template_id:
+            if self.product_template_id.sale_order_line_workflow == 'shipment':
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Shipment Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.shipment.order',
+                'res_id': newsh.id,
+                'target': 'current',
+                }
+                
+            elif self.product_template_id.sale_order_line_workflow == 'transport':
+                
+                newtr = self.env['logistics.transport.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.transport.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Transport Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.transport.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
+            elif self.product_template_id.sale_order_line_workflow == 'storage':
+                
+                newtr = self.env['logistics.storage.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.storage.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Storage Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.storage.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
+            elif self.product_template_id.sale_order_line_workflow == 'customs':
+                
+                newtr = self.env['logistics.customs.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.customs.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Customs Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.customs.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+            
+            elif self.product_template_id.sale_order_line_workflow == 'service':
+                
+                newtr = self.env['logistics.service.order'].create({})
+                self.reference_document = '%s,%s'% ('logistics.service.order',newtr.id)
+                return {
+                'type': 'ir.actions.act_window',
+                'name': 'Service Order', 
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'logistics.service.order',
+                'res_id': newtr.id,
+                'target': 'current',
+                }
+
+    

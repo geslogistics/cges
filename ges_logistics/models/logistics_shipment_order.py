@@ -11,10 +11,14 @@ class ShipmentOrder(models.Model):
     active = fields.Boolean(default=True, string='Active')
     name = fields.Char(string='Name', copy=False, default=lambda self: ('New'))
     color = fields.Integer('Color')
-    datetime_create = fields.Datetime(string='Create Date', default=fields.Datetime.now())
+    create_datetime = fields.Datetime(string='Create Date', default=fields.Datetime.now())
     user_id = fields.Many2one('res.users', string='Salesperson', index=True, tracking=True, default=lambda self: self.env.user)
     company_id = fields.Many2one('res.company', 'Company', required=True, default=lambda self: self.env.company)
     currency_id = fields.Many2one(related='company_id.currency_id', depends=['company_id.currency_id'], store=True, string='Currency')
+
+    #status
+    state = fields.Selection([('new', 'Draft'),('inprogress', 'In Progress'),('confirmed', 'Confirmed'),('intransit', 'In Transit'),('delivered', 'Delivered'),('cancel', 'Cancelled')], string='Status', copy=False, tracking=True, default='new')
+    approval_state = fields.Selection([('pending', 'Pending'),('approved', 'Approved')], string='Approval Status', copy=False, tracking=True, default='approved')
 
     #shipment main fields
     direction = fields.Selection(([('import', 'Import'), ('export', 'Export')]), string='Direction')
@@ -72,12 +76,18 @@ class ShipmentOrder(models.Model):
     # One2many
     #sale_order_line_id = fields.One2many('sale.order.line', 'reference_document')
     
-    # Customer
+    # Customer fields
     customer_id = fields.Many2one('res.partner', string='Customer', ondelete='restrict')
     customer_email = fields.Char(related='customer_id.email', string="Customer Email")
     customer_phone = fields.Char(related='customer_id.phone', string="Customer Phone")
     customer_mobile = fields.Char(related='customer_id.mobile', string="Customer Mobile")
     is_customer_agent = fields.Boolean(string="Is Agent?")
+
+    # First Notify fields
+    first_notify_id = fields.Many2one('res.partner', string='1st Notify', ondelete='restrict')
+    first_notify_email = fields.Char(related='first_notify_id.email', string="1st Notify Email")
+    first_notify_phone = fields.Char(related='first_notify_id.phone', string="1st Notify Phone")
+    first_notify_mobile = fields.Char(related='first_notify_id.mobile', string="1st Notify Mobile")
 
     # Shipper
     shipper_id = fields.Many2one('res.partner', domain=[], ondelete='restrict')
@@ -99,7 +109,7 @@ class ShipmentOrder(models.Model):
 
     # origin main carriage address 
     origin_main_carriage_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country", ondelete='restrict')
-    origin_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POL", domain="[('country_id', '=', origin_main_carriage_country_id)]", ondelete='restrict')
+    origin_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POL", ondelete='restrict')
     origin_main_carriage_address_id = fields.Many2one('logistics.freight.address', string="From Address", domain="[('partner_id', '=', customer_id),('country_id', '=', origin_main_carriage_country_id)]", ondelete='restrict')
     origin_main_carriage_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
@@ -116,7 +126,7 @@ class ShipmentOrder(models.Model):
     # origin pickup address
     pickup_option = fields.Boolean("Pick-up?")
     origin_pickup_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country", ondelete='restrict')
-    origin_pickup_address_id = fields.Many2one('logistics.freight.address', string="Pick-Up Address", domain="[('partner_id', '=', customer_id),('country_id', '=', origin_pickup_country_id)]", ondelete='restrict')
+    origin_pickup_address_id = fields.Many2one('logistics.freight.address', string="Pick-Up Address", ondelete='restrict', domain="[('partner_id', '=', customer_id),('country_id', '=', origin_pickup_country_id)]")
     origin_pickup_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
     origin_pickup_address_name = fields.Char(string='Named Address Name')
@@ -167,15 +177,37 @@ class ShipmentOrder(models.Model):
     #sale order fields
     so_ids = fields.Many2many('sale.order', string='Sales', copy=False, compute="_get_so_ids")
     so_ids_count = fields.Integer("Count of SOs", compute='_get_so_ids')
-    so_ids_amount_total = fields.Monetary("Sales Total", digits=2, compute='_get_so_ids')
     so_ids_amount_untaxed = fields.Monetary("Sales Untaxed", digits=2, compute='_get_so_ids')
+    so_ids_amount_tax = fields.Monetary("Sales Taxes", digits=2, compute='_get_so_ids')
+    so_ids_amount_total = fields.Monetary("Sales Total", digits=2, compute='_get_so_ids')
+    
 
     #quotations fields
-    quotation_ids = fields.Many2many('sale.order', string='Sales', copy=False, compute="_get_so_ids")
-    quotation_ids_count = fields.Integer("Count of SOs", compute='_get_so_ids')
-    quotation_ids_amount_total = fields.Monetary("Sales Total", digits=2, compute='_get_so_ids')
-    quotation_ids_amount_untaxed = fields.Monetary("Sales Untaxed", digits=2, compute='_get_so_ids')
+    quotation_ids = fields.Many2many('sale.order', string='Quotations', copy=False, compute="_get_so_ids")
+    quotation_ids_count = fields.Integer("Count of Quotations", compute='_get_so_ids')
+    quotation_ids_amount_untaxed = fields.Monetary("Quotations Untaxed", digits=2, compute='_get_so_ids')
+    quotation_ids_amount_tax = fields.Monetary("Quotations Taxes", digits=2, compute='_get_so_ids')
+    quotation_ids_amount_total = fields.Monetary("Quotations Sales", digits=2, compute='_get_so_ids')
     
+
+    #invoice fields
+    invoice_ids = fields.Many2many('account.move', string='Invoices', copy=False, compute="_get_invoice_ids")
+    invoice_ids_count = fields.Integer("Count of Invoices", compute='_get_invoice_ids')
+    invoice_ids_amount_untaxed = fields.Monetary("Invoiced Untaxed", digits=2, compute='_get_invoice_ids')
+    invoice_ids_amount_tax = fields.Monetary("Invoiced Taxes", digits=2, compute='_get_invoice_ids')
+    invoice_ids_amount_total = fields.Monetary("Total Invoiced", digits=2, compute='_get_invoice_ids')
+    
+    
+    invoice_ids_due = fields.Many2many('account.move', string='Due Invoices', copy=False, compute="_get_invoice_ids")
+    invoice_ids_due_count = fields.Integer("Count of Due Invoices", compute='_get_invoice_ids')
+    invoice_ids_due_amount_total = fields.Monetary("Total Dues", digits=2, compute='_get_invoice_ids')
+
+    #services fields
+    sol_ids = fields.Many2many('sale.order.line', string='Services', copy=False, compute="_get_sol_ids")
+    sol_ids_count = fields.Integer("Count of Services", compute='_get_sol_ids')
+    sol_ids_amount_untaxed = fields.Monetary("Services Untaxed", digits=2, compute='_get_sol_ids')
+    sol_ids_amount_tax = fields.Monetary("Services Taxes", digits=2, compute='_get_sol_ids')
+    sol_ids_amount_total = fields.Monetary("Services Total", digits=2, compute='_get_sol_ids')
 
     
     @api.model
@@ -517,6 +549,19 @@ class ShipmentOrder(models.Model):
         result = super(ShipmentOrder, self).write(values)
         return result
 
+    #change domain of origin_main_carriage_port_id based on transport
+    @api.depends('transport','origin_main_carriage_country_id')
+    @api.onchange('transport','origin_main_carriage_country_id')
+    def _onchange_transport_origin_main_carriage_port_id(self):
+        return {'domain': {'origin_main_carriage_port_id' : [(self.transport,'=',True),('country_id', '=', self.origin_main_carriage_country_id.id)]}}
+
+    #change domain of destination_main_carriage_port_id based on transport
+    @api.depends('transport','destination_main_carriage_country_id')
+    @api.onchange('transport','destination_main_carriage_country_id')
+    def _onchange_transport_destination_main_carriage_port_id(self):
+        return {'domain': {'destination_main_carriage_port_id' : [(self.transport,'=',True),('country_id', '=', self.destination_main_carriage_country_id.id)]}}
+        
+    
     #update shipper and consignee based on direction & customer_id & is_customer_agent
     @api.onchange('customer_id','direction','is_customer_agent')
     def _onchange_customer_direction(self):
@@ -788,16 +833,19 @@ class ShipmentOrder(models.Model):
             sale_orders = sale_order_lines.order_id.filtered(lambda r: r.state in ('sale','done')) if sale_order_lines else False
             record.so_ids = sale_orders if sale_orders else False
             record.so_ids_count = len(sale_orders) if sale_orders else False
-            record.so_ids_amount_total = sum(line.amount_total for line in sale_orders) if sale_orders else False
             record.so_ids_amount_untaxed = sum(line.amount_untaxed for line in sale_orders) if sale_orders else False
+            record.so_ids_amount_tax = sum(line.amount_tax for line in sale_orders) if sale_orders else False
+            record.so_ids_amount_total = sum(line.amount_total for line in sale_orders) if sale_orders else False
+            
 
             quotations = sale_order_lines.order_id.filtered(lambda r: r.state in ('draft','sent')) if sale_order_lines else False
             record.quotation_ids = quotations if quotations else False
             record.quotation_ids_count = len(quotations) if quotations else False
-            record.quotation_ids_amount_total = sum(line.amount_total for line in quotations) if quotations else False
             record.quotation_ids_amount_untaxed = sum(line.amount_untaxed for line in quotations) if quotations else False
+            record.quotation_ids_amount_tax = sum(line.amount_tax for line in quotations) if quotations else False
+            record.quotation_ids_amount_total = sum(line.amount_total for line in quotations) if quotations else False
+            
 
-    
     def action_view_so(self):
         self.ensure_one()
         result = {
@@ -821,3 +869,57 @@ class ShipmentOrder(models.Model):
             "context": {"create":0,"delete":0},
              }
         return result
+    
+
+    #invoice & due functions
+    @api.depends('so_ids.order_line.invoice_lines')
+    def _get_invoice_ids(self):
+        for record in self:
+            invoices = record.so_ids.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
+            record.invoice_ids = invoices if invoices else False
+            record.invoice_ids_count = len(invoices) if invoices else False
+            record.invoice_ids_amount_untaxed = sum(line.amount_untaxed_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
+            record.invoice_ids_amount_tax = sum(line.amount_tax_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
+            record.invoice_ids_amount_total = sum(line.amount_total_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
+            
+            
+            invoices_due = record.so_ids.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund') and r.amount_residual_signed > 0)
+            record.invoice_ids_due = invoices_due if invoices_due else False
+            record.invoice_ids_due_count = len(invoices_due) if invoices_due else False
+            record.invoice_ids_due_amount_total = sum(line.amount_residual_signed for line in invoices_due.filtered(lambda r: r.state =='posted')) if invoices_due else False
+    
+    def action_view_invoices(self):
+        self.ensure_one()
+        result = {
+            "name": "Invoices",
+            "type": "ir.actions.act_window",
+            "res_model": "account.move",
+            "domain": [('id','in',self.invoice_ids.ids)],
+            "view_mode": "tree,form,search",
+            "context": {"create":0,"delete":0},
+             }
+        return result
+
+    def action_view_invoices_due(self):
+        self.ensure_one()
+        result = {
+            "name": "Due Invoices",
+            "type": "ir.actions.act_window",
+            "res_model": "account.move",
+            "domain": [('id','in',self.invoice_ids_due.ids)],
+            "view_mode": "tree,form,search",
+            "context": {"create":0,"delete":0},
+             }
+        return result
+
+
+    #sale order lines (services) functions
+    @api.depends('so_ids.order_line')
+    def _get_sol_ids(self):
+        for record in self:
+            sale_order_lines = record.env['sale.order.line'].sudo().search([('reference_document','=',str(record._name) + ',' + str(record.id))])
+            record.sol_ids = sale_order_lines if sale_order_lines else False
+            record.sol_ids_count = len(sale_order_lines) if sale_order_lines else False
+            record.sol_ids_amount_untaxed = sum(line.price_subtotal for line in sale_order_lines) if sale_order_lines else False
+            record.sol_ids_amount_tax = sum(line.price_tax for line in sale_order_lines) if sale_order_lines else False
+            record.sol_ids_amount_total = sum(line.price_total for line in sale_order_lines) if sale_order_lines else False

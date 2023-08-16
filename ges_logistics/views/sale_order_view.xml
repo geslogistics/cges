@@ -8,16 +8,10 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//tree/field[@name='product_template_id']" position="after">
-                        <button name="initiate_reference_document" type="object" icon="fa-search" string="" class="btn-primary"/>
+                        <button name="select_reference_document" type="object" icon="fa-search" string="" class="btn-primary"/>
                         <button name="initiate_reference_document" type="object" icon="fa-magic" string="" class="btn-primary"/>
                         <field name="reference_document" force_save="1" options="{'no_quick_create': True, 'no_create': True}"/>
-                       
-                    
-                
                 </xpath>
-
-                
-
             </field>
         </record>
 
