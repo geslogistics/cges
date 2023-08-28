@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
+
 from odoo import models, fields, api, _
 
 
 class ProductCategory(models.Model):
-    
     _inherit = ['product.category']
 
     sale_order_line_workflow = fields.Selection([
@@ -11,7 +12,4 @@ class ProductCategory(models.Model):
         ('service', 'Service'),
         ('storage', 'Storage'),
         ('customs', 'Customs'),
-        ],string="Selling Workflow",copy=True, tracking=True)    
-    
-
-    
+    ], string="Selling Workflow", copy=True, tracking=True)

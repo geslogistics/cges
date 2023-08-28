@@ -11,12 +11,13 @@
     'company': 'GES Logistics',
     'maintainer': 'GES Logistics',
     'website': "https://www.geslogistics.com",
-    'depends': ['product',
-                'sale',
-                ],
+    'depends': ['product', 'sale'],
     'data': [
-        # Views
+        # Security
         'security/ir.model.access.csv',
+        # Data
+        'data/logistics_sequence_data.xml',
+        # Views
         'views/product_category_view.xml',
         'views/product_template_view.xml',
         'views/sale_order_view.xml',
@@ -29,7 +30,6 @@
         'views/logistics_customs_order_view.xml',
         'views/logistics_service_order_view.xml',
         'views/menu.xml',
-        'data/logistics_sequence_data.xml',
     ],
     'application': True,
     'installable': True,

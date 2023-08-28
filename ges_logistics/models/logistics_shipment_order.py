@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 
 
 class ShipmentOrder(models.Model):
-    
     _name = "logistics.shipment.order"
     _description = "Shipment Order"
     _inherit = ['mail.thread', 'mail.activity.mixin']
@@ -12,70 +13,84 @@ class ShipmentOrder(models.Model):
     name = fields.Char(string='Name', copy=False, default=lambda self: ('New'))
     color = fields.Integer('Color')
     create_datetime = fields.Datetime(string='Create Date', default=fields.Datetime.now())
-    user_id = fields.Many2one('res.users', string='Salesperson', index=True, tracking=True, default=lambda self: self.env.user)
+    user_id = fields.Many2one('res.users', string='Salesperson', index=True, tracking=True,
+                              default=lambda self: self.env.user)
     company_id = fields.Many2one('res.company', 'Company', required=True, default=lambda self: self.env.company)
-    currency_id = fields.Many2one(related='company_id.currency_id', depends=['company_id.currency_id'], store=True, string='Currency')
+    currency_id = fields.Many2one(related='company_id.currency_id', depends=['company_id.currency_id'], store=True,
+                                  string='Currency')
 
-    #status
-    state = fields.Selection([('new', 'Draft'),('inprogress', 'In Progress'),('confirmed', 'Confirmed'),('intransit', 'In Transit'),('delivered', 'Delivered'),('cancel', 'Cancelled')], string='Status', copy=False, tracking=True, default='new')
-    approval_state = fields.Selection([('pending', 'Pending'),('approved', 'Approved')], string='Approval Status', copy=False, tracking=True, default='approved')
+    # status
+    state = fields.Selection(
+        [('new', 'Draft'), ('inprogress', 'In Progress'), ('confirmed', 'Confirmed'), ('intransit', 'In Transit'),
+         ('delivered', 'Delivered'), ('cancel', 'Cancelled')], string='Status', copy=False, tracking=True,
+        default='new')
+    approval_state = fields.Selection([('pending', 'Pending'), ('approved', 'Approved')], string='Approval Status',
+                                      copy=False, tracking=True, default='approved')
 
-    #shipment main fields
+    # shipment main fields
     direction = fields.Selection(([('import', 'Import'), ('export', 'Export')]), string='Direction')
-    transport = fields.Selection(([('ocean', 'Ocean'), ('air', 'Air'), ('road', 'Road'),('rail','Rail')]), string='Transport Via')
-    ocean_shipment_type = fields.Selection([('general_cargo_full_container_load_fcl','General Cargo > Full Container Load (FCL)'),
-    ('general_cargo_less_than_container_load_lcl','General Cargo > Less Than Container Load (LCL)'),
-    ('general_cargo_break-bulk','General Cargo > Break-bulk'),
-    ('general_cargo_neo-bulk','General Cargo > Neo-bulk'),
-    ('roll-on/roll-off_roro_pure_car_carrier_pcc','Roll-on/roll-off (RoRo) > Pure Car Carrier (PCC)'),
-    ('roll-on/roll-off_roro_pure_truck_and_car_carrier_pctc','Roll-on/roll-off (RoRo) > Pure Truck and Car Carrier (PCTC)'),
-    ('roll-on/roll-off_roro_cars_&_passenger_ropax','Roll-on/roll-off (RoRo) > Cars & Passenger (RoPax)'),
-    ('roll-on/roll-off_roro_others','Roll-on/roll-off (RoRo) > Others'),
-    ('loose_cargo_dry-bulk','Loose Cargo > Dry-bulk'),
-    ('loose_cargo_liquid-bulk','Loose Cargo > Liquid-bulk'),
-    ('loose_cargo_iso-tank','Loose Cargo > ISO-Tank'),
-    ('loose_cargo_others','Loose Cargo > Others')], string="Shipment Type")
-    air_shipment_type = fields.Selection([('general_cargo_full_container_load_fcl','General Cargo > Full Container Load (FCL)'),
-    ('general_cargo_less_than_container_load_lcl','General Cargo > Less Than Container Load (LCL)'),
-    ('general_cargo_break-bulk','General Cargo > Break-bulk'),
-    ('special_cargo_live_animal','Special Cargo > Live Animal'),
-    ('special_cargo_perishable_cargo','Special Cargo > Perishable Cargo'),
-    ('special_cargo_mail_cargo','Special Cargo > Mail Cargo'),
-    ('special_cargo_human_remains,_tissue,_and_organ_cargo','Special Cargo > Human Remains, Tissue, and Organ Cargo'),
-    ('special_cargo_dangerous_goods','Special Cargo > Dangerous Goods'),
-    ('special_cargo_others','Special Cargo > Others')], string="Shipment Type")
-    road_shipment_type = fields.Selection([('full_truck_load_ftl_flatbed_trailer','Full Truck Load (FTL) > Flatbed Trailer'),
-    ('full_truck_load_ftl_lowbed_trailer','Full Truck Load (FTL) > Lowbed Trailer'),
-    ('full_truck_load_ftl_self-propelled_modular_transporter_spmt','Full Truck Load (FTL) > Self-Propelled Modular Transporter (SPMT)'),
-    ('full_truck_load_ftl_car_carrier','Full Truck Load (FTL) > Car Carrier'),
-    ('full_truck_load_ftl_temperature_controlled','Full Truck Load (FTL) > Temperature Controlled'),
-    ('full_truck_load_ftl_liquid_tank','Full Truck Load (FTL) > Liquid Tank'),
-    ('full_truck_load_ftl_dyna/lorry','Full Truck Load (FTL) > Dyna/Lorry'),
-    ('less_than_truck_load_ltl_flatbed_trailer','Less Than Truck Load (LTL) > Flatbed Trailer'),
-    ('less_than_truck_load_ltl_lowbed_trailer','Less Than Truck Load (LTL) > Lowbed Trailer'),
-    ('less_than_truck_load_ltl_temperature_controlled','Less Than Truck Load (LTL) > Temperature Controlled'),
-    ('less_than_truck_load_ltl_dyna/lorry','Less Than Truck Load (LTL) > Dyna/Lorry'),
-    ('others','Others'),], string="Shipment Type")
-    rail_shipment_type = fields.Selection([('full_truck_load_ftl_flatbed_trailer','Full Truck Load (FTL) > Flatbed Trailer'),
-    ('full_truck_load_ftl_lowbed_trailer','Full Truck Load (FTL) > Lowbed Trailer'),
-    ('full_truck_load_ftl_self-propelled_modular_transporter_spmt','Full Truck Load (FTL) > Self-Propelled Modular Transporter (SPMT)'),
-    ('full_truck_load_ftl_car_carrier','Full Truck Load (FTL) > Car Carrier'),
-    ('full_truck_load_ftl_temperature_controlled','Full Truck Load (FTL) > Temperature Controlled'),
-    ('full_truck_load_ftl_liquid_tank','Full Truck Load (FTL) > Liquid Tank'),
-    ('full_truck_load_ftl_dyna/lorry','Full Truck Load (FTL) > Dyna/Lorry'),
-    ('less_than_truck_load_ltl_flatbed_trailer','Less Than Truck Load (LTL) > Flatbed Trailer'),
-    ('less_than_truck_load_ltl_lowbed_trailer','Less Than Truck Load (LTL) > Lowbed Trailer'),
-    ('less_than_truck_load_ltl_temperature_controlled','Less Than Truck Load (LTL) > Temperature Controlled'),
-    ('less_than_truck_load_ltl_dyna/lorry','Less Than Truck Load (LTL) > Dyna/Lorry'),
-    ('others','Others')], string="Shipment Type")
+    transport = fields.Selection(([('ocean', 'Ocean'), ('air', 'Air'), ('road', 'Road'), ('rail', 'Rail')]),
+                                 string='Transport Via')
+    ocean_shipment_type = fields.Selection(
+        [('general_cargo_full_container_load_fcl', 'General Cargo > Full Container Load (FCL)'),
+         ('general_cargo_less_than_container_load_lcl', 'General Cargo > Less Than Container Load (LCL)'),
+         ('general_cargo_break-bulk', 'General Cargo > Break-bulk'),
+         ('general_cargo_neo-bulk', 'General Cargo > Neo-bulk'),
+         ('roll-on/roll-off_roro_pure_car_carrier_pcc', 'Roll-on/roll-off (RoRo) > Pure Car Carrier (PCC)'),
+         ('roll-on/roll-off_roro_pure_truck_and_car_carrier_pctc',
+          'Roll-on/roll-off (RoRo) > Pure Truck and Car Carrier (PCTC)'),
+         ('roll-on/roll-off_roro_cars_&_passenger_ropax', 'Roll-on/roll-off (RoRo) > Cars & Passenger (RoPax)'),
+         ('roll-on/roll-off_roro_others', 'Roll-on/roll-off (RoRo) > Others'),
+         ('loose_cargo_dry-bulk', 'Loose Cargo > Dry-bulk'),
+         ('loose_cargo_liquid-bulk', 'Loose Cargo > Liquid-bulk'),
+         ('loose_cargo_iso-tank', 'Loose Cargo > ISO-Tank'),
+         ('loose_cargo_others', 'Loose Cargo > Others')], string="Shipment Type")
+    air_shipment_type = fields.Selection(
+        [('general_cargo_full_container_load_fcl', 'General Cargo > Full Container Load (FCL)'),
+         ('general_cargo_less_than_container_load_lcl', 'General Cargo > Less Than Container Load (LCL)'),
+         ('general_cargo_break-bulk', 'General Cargo > Break-bulk'),
+         ('special_cargo_live_animal', 'Special Cargo > Live Animal'),
+         ('special_cargo_perishable_cargo', 'Special Cargo > Perishable Cargo'),
+         ('special_cargo_mail_cargo', 'Special Cargo > Mail Cargo'),
+         ('special_cargo_human_remains,_tissue,_and_organ_cargo',
+          'Special Cargo > Human Remains, Tissue, and Organ Cargo'),
+         ('special_cargo_dangerous_goods', 'Special Cargo > Dangerous Goods'),
+         ('special_cargo_others', 'Special Cargo > Others')], string="Shipment Type")
+    road_shipment_type = fields.Selection(
+        [('full_truck_load_ftl_flatbed_trailer', 'Full Truck Load (FTL) > Flatbed Trailer'),
+         ('full_truck_load_ftl_lowbed_trailer', 'Full Truck Load (FTL) > Lowbed Trailer'),
+         ('full_truck_load_ftl_self-propelled_modular_transporter_spmt',
+          'Full Truck Load (FTL) > Self-Propelled Modular Transporter (SPMT)'),
+         ('full_truck_load_ftl_car_carrier', 'Full Truck Load (FTL) > Car Carrier'),
+         ('full_truck_load_ftl_temperature_controlled', 'Full Truck Load (FTL) > Temperature Controlled'),
+         ('full_truck_load_ftl_liquid_tank', 'Full Truck Load (FTL) > Liquid Tank'),
+         ('full_truck_load_ftl_dyna/lorry', 'Full Truck Load (FTL) > Dyna/Lorry'),
+         ('less_than_truck_load_ltl_flatbed_trailer', 'Less Than Truck Load (LTL) > Flatbed Trailer'),
+         ('less_than_truck_load_ltl_lowbed_trailer', 'Less Than Truck Load (LTL) > Lowbed Trailer'),
+         ('less_than_truck_load_ltl_temperature_controlled', 'Less Than Truck Load (LTL) > Temperature Controlled'),
+         ('less_than_truck_load_ltl_dyna/lorry', 'Less Than Truck Load (LTL) > Dyna/Lorry'),
+         ('others', 'Others'), ], string="Shipment Type")
+    rail_shipment_type = fields.Selection(
+        [('full_truck_load_ftl_flatbed_trailer', 'Full Truck Load (FTL) > Flatbed Trailer'),
+         ('full_truck_load_ftl_lowbed_trailer', 'Full Truck Load (FTL) > Lowbed Trailer'),
+         ('full_truck_load_ftl_self-propelled_modular_transporter_spmt',
+          'Full Truck Load (FTL) > Self-Propelled Modular Transporter (SPMT)'),
+         ('full_truck_load_ftl_car_carrier', 'Full Truck Load (FTL) > Car Carrier'),
+         ('full_truck_load_ftl_temperature_controlled', 'Full Truck Load (FTL) > Temperature Controlled'),
+         ('full_truck_load_ftl_liquid_tank', 'Full Truck Load (FTL) > Liquid Tank'),
+         ('full_truck_load_ftl_dyna/lorry', 'Full Truck Load (FTL) > Dyna/Lorry'),
+         ('less_than_truck_load_ltl_flatbed_trailer', 'Less Than Truck Load (LTL) > Flatbed Trailer'),
+         ('less_than_truck_load_ltl_lowbed_trailer', 'Less Than Truck Load (LTL) > Lowbed Trailer'),
+         ('less_than_truck_load_ltl_temperature_controlled', 'Less Than Truck Load (LTL) > Temperature Controlled'),
+         ('less_than_truck_load_ltl_dyna/lorry', 'Less Than Truck Load (LTL) > Dyna/Lorry'),
+         ('others', 'Others')], string="Shipment Type")
 
-
-    #tracking
+    # tracking
     tracking_number = fields.Char('Tracking Number')
 
     # One2many
-    #sale_order_line_id = fields.One2many('sale.order.line', 'reference_document')
-    
+    # sale_order_line_id = fields.One2many('sale.order.line', 'reference_document')
+
     # Customer fields
     customer_id = fields.Many2one('res.partner', string='Customer', ondelete='restrict')
     customer_email = fields.Char(related='customer_id.email', string="Customer Email")
@@ -108,16 +123,25 @@ class ShipmentOrder(models.Model):
     agent_mobile = fields.Char(related='agent_id.mobile', string="Agent Mobile")
 
     # origin main carriage address 
-    origin_main_carriage_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country", ondelete='restrict')
-    origin_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POL", ondelete='restrict')
-    origin_main_carriage_address_id = fields.Many2one('logistics.freight.address', string="From Address", domain="[('partner_id', '=', customer_id),('country_id', '=', origin_main_carriage_country_id)]", ondelete='restrict')
+    origin_main_carriage_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country",
+                                                      ondelete='restrict')
+    origin_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POL",
+                                                   ondelete='restrict')
+    origin_main_carriage_address_id = fields.Many2one('logistics.freight.address', string="From Address",
+                                                      domain="[('partner_id', '=', customer_id),('country_id', '=', origin_main_carriage_country_id)]",
+                                                      ondelete='restrict')
     origin_main_carriage_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
     origin_main_carriage_address_name = fields.Char(string='Port/Terminal Name')
     origin_main_carriage_address_code = fields.Char(string='Port/Terminal Code')
-    origin_main_carriage_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country", ondelete='restrict')
-    origin_main_carriage_address_state_id = fields.Many2one('logistics.freight.address.state', string="State", domain="[('country_id', '=', origin_main_carriage_address_country_id)]", ondelete='restrict')
-    origin_main_carriage_address_city_id = fields.Many2one('logistics.freight.address.city', string="City", domain="[('country_id', '=', origin_main_carriage_address_country_id)]", ondelete='restrict')
+    origin_main_carriage_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country",
+                                                              ondelete='restrict')
+    origin_main_carriage_address_state_id = fields.Many2one('logistics.freight.address.state', string="State",
+                                                            domain="[('country_id', '=', origin_main_carriage_address_country_id)]",
+                                                            ondelete='restrict')
+    origin_main_carriage_address_city_id = fields.Many2one('logistics.freight.address.city', string="City",
+                                                           domain="[('country_id', '=', origin_main_carriage_address_country_id)]",
+                                                           ondelete='restrict')
     origin_main_carriage_address_zip_code = fields.Char(string="Zip Code")
     origin_main_carriage_address_street = fields.Char(string="Street")
     origin_main_carriage_address_street2 = fields.Char(string="Street 2")
@@ -125,31 +149,49 @@ class ShipmentOrder(models.Model):
 
     # origin pickup address
     pickup_option = fields.Boolean("Pick-up?")
-    origin_pickup_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country", ondelete='restrict')
-    origin_pickup_address_id = fields.Many2one('logistics.freight.address', string="Pick-Up Address", ondelete='restrict', domain="[('partner_id', '=', customer_id),('country_id', '=', origin_pickup_country_id)]")
+    origin_pickup_country_id = fields.Many2one('logistics.freight.address.country', string="Origin Country",
+                                               ondelete='restrict')
+    origin_pickup_address_id = fields.Many2one('logistics.freight.address', string="Pick-Up Address",
+                                               ondelete='restrict',
+                                               domain="[('partner_id', '=', customer_id),('country_id', '=', origin_pickup_country_id)]")
     origin_pickup_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
     origin_pickup_address_name = fields.Char(string='Named Address Name')
     origin_pickup_address_code = fields.Char(string='Named Address Code')
-    origin_pickup_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country", ondelete='restrict')
-    origin_pickup_address_state_id = fields.Many2one('logistics.freight.address.state', string="State", domain="[('country_id', '=', origin_pickup_address_country_id)]", ondelete='restrict')
-    origin_pickup_address_city_id = fields.Many2one('logistics.freight.address.city', string="City", domain="[('country_id', '=', origin_pickup_address_country_id)]", ondelete='restrict')
+    origin_pickup_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country",
+                                                       ondelete='restrict')
+    origin_pickup_address_state_id = fields.Many2one('logistics.freight.address.state', string="State",
+                                                     domain="[('country_id', '=', origin_pickup_address_country_id)]",
+                                                     ondelete='restrict')
+    origin_pickup_address_city_id = fields.Many2one('logistics.freight.address.city', string="City",
+                                                    domain="[('country_id', '=', origin_pickup_address_country_id)]",
+                                                    ondelete='restrict')
     origin_pickup_address_zip_code = fields.Char(string="Zip Code")
     origin_pickup_address_street = fields.Char(string="Street")
     origin_pickup_address_street2 = fields.Char(string="Street 2")
     origin_pickup_address_street3 = fields.Char(string="Street 3")
 
-    #destination main carriage address 
-    destination_main_carriage_country_id = fields.Many2one('logistics.freight.address.country', string="Destination Country", ondelete='restrict')
-    destination_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POD", domain="[('country_id', '=', destination_main_carriage_country_id)]", ondelete='restrict')
-    destination_main_carriage_address_id = fields.Many2one('logistics.freight.address', string="To Address", domain="[('partner_id', '=', customer_id),('country_id', '=', destination_main_carriage_country_id)]", ondelete='restrict')
+    # destination main carriage address
+    destination_main_carriage_country_id = fields.Many2one('logistics.freight.address.country',
+                                                           string="Destination Country", ondelete='restrict')
+    destination_main_carriage_port_id = fields.Many2one('logistics.freight.port', string="Terminal at POD",
+                                                        domain="[('country_id', '=', destination_main_carriage_country_id)]",
+                                                        ondelete='restrict')
+    destination_main_carriage_address_id = fields.Many2one('logistics.freight.address', string="To Address",
+                                                           domain="[('partner_id', '=', customer_id),('country_id', '=', destination_main_carriage_country_id)]",
+                                                           ondelete='restrict')
     destination_main_carriage_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
     destination_main_carriage_address_name = fields.Char(string='Port/Terminal Name')
     destination_main_carriage_address_code = fields.Char(string='Port/Terminal Code')
-    destination_main_carriage_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country", ondelete='restrict')
-    destination_main_carriage_address_state_id = fields.Many2one('logistics.freight.address.state', string="State", domain="[('country_id', '=', destination_main_carriage_address_country_id)]", ondelete='restrict')
-    destination_main_carriage_address_city_id = fields.Many2one('logistics.freight.address.city', string="City", domain="[('country_id', '=', destination_main_carriage_address_country_id)]", ondelete='restrict')
+    destination_main_carriage_address_country_id = fields.Many2one('logistics.freight.address.country',
+                                                                   string="Country", ondelete='restrict')
+    destination_main_carriage_address_state_id = fields.Many2one('logistics.freight.address.state', string="State",
+                                                                 domain="[('country_id', '=', destination_main_carriage_address_country_id)]",
+                                                                 ondelete='restrict')
+    destination_main_carriage_address_city_id = fields.Many2one('logistics.freight.address.city', string="City",
+                                                                domain="[('country_id', '=', destination_main_carriage_address_country_id)]",
+                                                                ondelete='restrict')
     destination_main_carriage_address_zip_code = fields.Char(string="Zip Code")
     destination_main_carriage_address_street = fields.Char(string="Street")
     destination_main_carriage_address_street2 = fields.Char(string="Street 2")
@@ -157,59 +199,63 @@ class ShipmentOrder(models.Model):
 
     # destination delivery address
     delivery_option = fields.Boolean("Delivery?")
-    destination_delivery_country_id = fields.Many2one('logistics.freight.address.country', string="Destination Country", ondelete='restrict')
-    destination_delivery_address_id = fields.Many2one('logistics.freight.address', string="Delivery Address", domain="[('partner_id', '=', customer_id),('country_id', '=', destination_delivery_country_id)]", ondelete='restrict')
+    destination_delivery_country_id = fields.Many2one('logistics.freight.address.country', string="Destination Country",
+                                                      ondelete='restrict')
+    destination_delivery_address_id = fields.Many2one('logistics.freight.address', string="Delivery Address",
+                                                      domain="[('partner_id', '=', customer_id),('country_id', '=', destination_delivery_country_id)]",
+                                                      ondelete='restrict')
     destination_delivery_address_save_option = fields.Boolean(string="Save Address", store=False, default=False)
 
     destination_delivery_address_name = fields.Char(string='Named Address Name')
     destination_delivery_address_code = fields.Char(string='Named Address Code')
-    destination_delivery_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country", ondelete='restrict')
-    destination_delivery_address_state_id = fields.Many2one('logistics.freight.address.state', string="State", domain="[('country_id', '=', destination_delivery_address_country_id)]", ondelete='restrict')
-    destination_delivery_address_city_id = fields.Many2one('logistics.freight.address.city', string="City", domain="[('country_id', '=', destination_delivery_address_country_id)]", ondelete='restrict')
+    destination_delivery_address_country_id = fields.Many2one('logistics.freight.address.country', string="Country",
+                                                              ondelete='restrict')
+    destination_delivery_address_state_id = fields.Many2one('logistics.freight.address.state', string="State",
+                                                            domain="[('country_id', '=', destination_delivery_address_country_id)]",
+                                                            ondelete='restrict')
+    destination_delivery_address_city_id = fields.Many2one('logistics.freight.address.city', string="City",
+                                                           domain="[('country_id', '=', destination_delivery_address_country_id)]",
+                                                           ondelete='restrict')
     destination_delivery_address_zip_code = fields.Char(string="Zip Code")
     destination_delivery_address_street = fields.Char(string="Street")
     destination_delivery_address_street2 = fields.Char(string="Street 2")
     destination_delivery_address_street3 = fields.Char(string="Street 3")
-    
-    #incoterm
+
+    # incoterm
     incoterms_id = fields.Many2one('logistics.freight.incoterms', string='Incoterms', ondelete='restrict')
 
-    #sale order fields
+    # sale order fields
     so_ids = fields.Many2many('sale.order', string='Sales', copy=False, compute="_get_so_ids")
     so_ids_count = fields.Integer("Count of SOs", compute='_get_so_ids')
     so_ids_amount_untaxed = fields.Monetary("Sales Untaxed", digits=2, compute='_get_so_ids')
     so_ids_amount_tax = fields.Monetary("Sales Taxes", digits=2, compute='_get_so_ids')
     so_ids_amount_total = fields.Monetary("Sales Total", digits=2, compute='_get_so_ids')
-    
 
-    #quotations fields
+    # quotations fields
     quotation_ids = fields.Many2many('sale.order', string='Quotations', copy=False, compute="_get_so_ids")
     quotation_ids_count = fields.Integer("Count of Quotations", compute='_get_so_ids')
     quotation_ids_amount_untaxed = fields.Monetary("Quotations Untaxed", digits=2, compute='_get_so_ids')
     quotation_ids_amount_tax = fields.Monetary("Quotations Taxes", digits=2, compute='_get_so_ids')
     quotation_ids_amount_total = fields.Monetary("Quotations Sales", digits=2, compute='_get_so_ids')
-    
 
-    #invoice fields
+    # invoice fields
     invoice_ids = fields.Many2many('account.move', string='Invoices', copy=False, compute="_get_invoice_ids")
     invoice_ids_count = fields.Integer("Count of Invoices", compute='_get_invoice_ids')
     invoice_ids_amount_untaxed = fields.Monetary("Invoiced Untaxed", digits=2, compute='_get_invoice_ids')
     invoice_ids_amount_tax = fields.Monetary("Invoiced Taxes", digits=2, compute='_get_invoice_ids')
     invoice_ids_amount_total = fields.Monetary("Total Invoiced", digits=2, compute='_get_invoice_ids')
-    
-    
+
     invoice_ids_due = fields.Many2many('account.move', string='Due Invoices', copy=False, compute="_get_invoice_ids")
     invoice_ids_due_count = fields.Integer("Count of Due Invoices", compute='_get_invoice_ids')
     invoice_ids_due_amount_total = fields.Monetary("Total Dues", digits=2, compute='_get_invoice_ids')
 
-    #services fields
+    # services fields
     sol_ids = fields.Many2many('sale.order.line', string='Services', copy=False, compute="_get_sol_ids")
     sol_ids_count = fields.Integer("Count of Services", compute='_get_sol_ids')
     sol_ids_amount_untaxed = fields.Monetary("Services Untaxed", digits=2, compute='_get_sol_ids')
     sol_ids_amount_tax = fields.Monetary("Services Taxes", digits=2, compute='_get_sol_ids')
     sol_ids_amount_total = fields.Monetary("Services Total", digits=2, compute='_get_sol_ids')
 
-    
     @api.model
     def create(self, values):
         if values.get('name', ('New')) == ('New'):
@@ -218,7 +264,8 @@ class ShipmentOrder(models.Model):
                 values['name'] = air_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
             elif values.get('transport') == 'ocean':
                 ocean_pre = "GES/SH/OCEAN"
-                values['name'] = ocean_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
+                values['name'] = ocean_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _(
+                    'New')
             elif values.get('transport') == 'road':
                 road_pre = "GES/SH/ROAD"
                 values['name'] = road_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
@@ -228,7 +275,8 @@ class ShipmentOrder(models.Model):
         if values.get('name', False) and not values.get('tracking_number', False):
             values['tracking_number'] = values.get('name', False)
 
-        if not values.get('origin_main_carriage_address_id', False) and values.get('origin_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
+        if not values.get('origin_main_carriage_address_id', False) and values.get(
+                'origin_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
             newaddress_dict = {}
             if values.get('origin_main_carriage_address_name', False):
                 newaddress_dict['name'] = values.get('origin_main_carriage_address_name', False)
@@ -250,12 +298,13 @@ class ShipmentOrder(models.Model):
                 newaddress_dict['street3'] = values.get('origin_main_carriage_address_street3', False)
             if values.get('customer_id', False):
                 newaddress_dict['partner_id'] = values.get('customer_id', False)
-            
+
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['origin_main_carriage_address_id'] = newaddress.id
 
-        if not values.get('destination_main_carriage_address_id', False) and values.get('destination_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
+        if not values.get('destination_main_carriage_address_id', False) and values.get(
+                'destination_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
             newaddress_dict = {}
             if values.get('destination_main_carriage_address_name', False):
                 newaddress_dict['name'] = values.get('destination_main_carriage_address_name', False)
@@ -281,8 +330,7 @@ class ShipmentOrder(models.Model):
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['destination_main_carriage_address_id'] = newaddress.id
-        
-        
+
         if not values.get('origin_pickup_address_id', False) and values.get('origin_pickup_address_save_option', False):
             newaddress_dict = {}
             if values.get('origin_pickup_address_name', False):
@@ -309,8 +357,9 @@ class ShipmentOrder(models.Model):
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['origin_pickup_address_id'] = newaddress.id
-        
-        if not values.get('destination_delivery_address_id', False) and values.get('destination_delivery_address_save_option', False):
+
+        if not values.get('destination_delivery_address_id', False) and values.get(
+                'destination_delivery_address_save_option', False):
             newaddress_dict = {}
             if values.get('destination_delivery_address_name', False):
                 newaddress_dict['name'] = values.get('destination_delivery_address_name', False)
@@ -332,14 +381,14 @@ class ShipmentOrder(models.Model):
                 newaddress_dict['street3'] = values.get('destination_delivery_address_street3', False)
             if values.get('customer_id', False):
                 newaddress_dict['partner_id'] = values.get('customer_id', False)
-   
+
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['destination_delivery_address_id'] = newaddress.id
-        
+
         result = super(ShipmentOrder, self).create(values)
         return result
-        
+
     def write(self, values):
         if values.get('name', ('New')) == ('New'):
             if values.get('transport') == 'air':
@@ -347,7 +396,8 @@ class ShipmentOrder(models.Model):
                 values['name'] = air_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
             elif values.get('transport') == 'ocean':
                 ocean_pre = "GES/SH/OCEAN"
-                values['name'] = ocean_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
+                values['name'] = ocean_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _(
+                    'New')
             elif values.get('transport') == 'road':
                 road_pre = "GES/SH/ROAD"
                 values['name'] = road_pre + self.env['ir.sequence'].next_by_code('logistics.shipment.order') or _('New')
@@ -357,7 +407,8 @@ class ShipmentOrder(models.Model):
         if values.get('name', False) and not values.get('tracking_number', False):
             values['tracking_number'] = values.get('name', False)
 
-        if not values.get('origin_main_carriage_address_id', False) and values.get('origin_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
+        if not values.get('origin_main_carriage_address_id', False) and values.get(
+                'origin_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
             newaddress_dict = {}
             if values.get('origin_main_carriage_address_name', False):
                 newaddress_dict['name'] = values.get('origin_main_carriage_address_name', False)
@@ -399,12 +450,13 @@ class ShipmentOrder(models.Model):
                 newaddress_dict['partner_id'] = values.get('customer_id', False)
             else:
                 newaddress_dict['partner_id'] = self.customer_id.id
-            
+
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['origin_main_carriage_address_id'] = newaddress.id
 
-        if not values.get('destination_main_carriage_address_id', False) and values.get('destination_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
+        if not values.get('destination_main_carriage_address_id', False) and values.get(
+                'destination_main_carriage_address_save_option', False) and values.get('transport', False) == 'road':
             newaddress_dict = {}
             if values.get('destination_main_carriage_address_name', False):
                 newaddress_dict['name'] = values.get('destination_main_carriage_address_name', False)
@@ -450,8 +502,7 @@ class ShipmentOrder(models.Model):
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['destination_main_carriage_address_id'] = newaddress.id
-        
-        
+
         if not values.get('origin_pickup_address_id', False) and values.get('origin_pickup_address_save_option', False):
             newaddress_dict = {}
             if values.get('origin_pickup_address_name', False):
@@ -498,8 +549,9 @@ class ShipmentOrder(models.Model):
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['origin_pickup_address_id'] = newaddress.id
-        
-        if not values.get('destination_delivery_address_id', False) and values.get('destination_delivery_address_save_option', False):
+
+        if not values.get('destination_delivery_address_id', False) and values.get(
+                'destination_delivery_address_save_option', False):
             newaddress_dict = {}
             if values.get('destination_delivery_address_name', False):
                 newaddress_dict['name'] = values.get('destination_delivery_address_name', False)
@@ -541,29 +593,30 @@ class ShipmentOrder(models.Model):
                 newaddress_dict['partner_id'] = values.get('customer_id', False)
             else:
                 newaddress_dict['partner_id'] = self.customer_id.id
-   
+
             if newaddress_dict:
                 newaddress = self.env['logistics.freight.address'].sudo().create(newaddress_dict)
                 values['destination_delivery_address_id'] = newaddress.id
-        
+
         result = super(ShipmentOrder, self).write(values)
         return result
 
-    #change domain of origin_main_carriage_port_id based on transport
-    @api.depends('transport','origin_main_carriage_country_id')
-    @api.onchange('transport','origin_main_carriage_country_id')
+    # change domain of origin_main_carriage_port_id based on transport
+    @api.depends('transport', 'origin_main_carriage_country_id')
+    @api.onchange('transport', 'origin_main_carriage_country_id')
     def _onchange_transport_origin_main_carriage_port_id(self):
-        return {'domain': {'origin_main_carriage_port_id' : [(self.transport,'=',True),('country_id', '=', self.origin_main_carriage_country_id.id)]}}
+        return {'domain': {'origin_main_carriage_port_id': [(self.transport, '=', True), (
+            'country_id', '=', self.origin_main_carriage_country_id.id)]}}
 
-    #change domain of destination_main_carriage_port_id based on transport
-    @api.depends('transport','destination_main_carriage_country_id')
-    @api.onchange('transport','destination_main_carriage_country_id')
+    # change domain of destination_main_carriage_port_id based on transport
+    @api.depends('transport', 'destination_main_carriage_country_id')
+    @api.onchange('transport', 'destination_main_carriage_country_id')
     def _onchange_transport_destination_main_carriage_port_id(self):
-        return {'domain': {'destination_main_carriage_port_id' : [(self.transport,'=',True),('country_id', '=', self.destination_main_carriage_country_id.id)]}}
-        
-    
-    #update shipper and consignee based on direction & customer_id & is_customer_agent
-    @api.onchange('customer_id','direction','is_customer_agent')
+        return {'domain': {'destination_main_carriage_port_id': [(self.transport, '=', True), (
+            'country_id', '=', self.destination_main_carriage_country_id.id)]}}
+
+    # update shipper and consignee based on direction & customer_id & is_customer_agent
+    @api.onchange('customer_id', 'direction', 'is_customer_agent')
     def _onchange_customer_direction(self):
         if self.customer_id and self.direction:
             if self.direction == 'import':
@@ -588,9 +641,9 @@ class ShipmentOrder(models.Model):
             self.consignee_id = False
             self.shipper_id = False
             self.agent_id = False
-    
-    #reset origin_main_carriage_port_id based on origin_main_carriage_country_id
-    @api.onchange('origin_main_carriage_country_id','transport')
+
+    # reset origin_main_carriage_port_id based on origin_main_carriage_country_id
+    @api.onchange('origin_main_carriage_country_id', 'transport')
     def _onchange_origin_main_carriage_country_id(self):
         self.origin_main_carriage_port_id = False
         self.origin_main_carriage_address_id = False
@@ -600,11 +653,10 @@ class ShipmentOrder(models.Model):
         else:
             self.origin_main_carriage_address_country_id = False
 
-    
-    #update origin main carriage address
-    @api.onchange('origin_main_carriage_port_id','origin_main_carriage_address_id','transport')
+    # update origin main carriage address
+    @api.onchange('origin_main_carriage_port_id', 'origin_main_carriage_address_id', 'transport')
     def _onchange_origin_main_carriage_port_id(self):
-        if self.transport in ('ocean','air','rail'):
+        if self.transport in ('ocean', 'air', 'rail'):
             if self.origin_main_carriage_port_id:
                 self.origin_main_carriage_address_name = self.origin_main_carriage_port_id.name
                 self.origin_main_carriage_address_code = self.origin_main_carriage_port_id.code
@@ -648,10 +700,9 @@ class ShipmentOrder(models.Model):
                 self.origin_main_carriage_address_street2 = False
                 self.origin_main_carriage_address_street3 = False
                 self.origin_main_carriage_address_save_option = False
-        
 
-    #reset destination_main_carriage_port_id based on destination_main_carriage_country_id
-    @api.onchange('destination_main_carriage_country_id','transport')
+    # reset destination_main_carriage_port_id based on destination_main_carriage_country_id
+    @api.onchange('destination_main_carriage_country_id', 'transport')
     def _onchange_destination_main_carriage_country_id(self):
         self.destination_main_carriage_port_id = False
         self.destination_main_carriage_address_id = False
@@ -660,11 +711,11 @@ class ShipmentOrder(models.Model):
             self.destination_main_carriage_address_country_id = self.destination_main_carriage_country_id.id
         else:
             self.destination_main_carriage_address_country_id = False
-    
-    #update destination main carriage address
-    @api.onchange('destination_main_carriage_port_id','destination_main_carriage_address_id','transport')
+
+    # update destination main carriage address
+    @api.onchange('destination_main_carriage_port_id', 'destination_main_carriage_address_id', 'transport')
     def _onchange_destination_main_carriage_id(self):
-        if self.transport in ('ocean','air','rail'):
+        if self.transport in ('ocean', 'air', 'rail'):
             if self.destination_main_carriage_port_id:
                 self.destination_main_carriage_address_name = self.destination_main_carriage_port_id.name
                 self.destination_main_carriage_address_code = self.destination_main_carriage_port_id.code
@@ -678,7 +729,7 @@ class ShipmentOrder(models.Model):
             else:
                 self.destination_main_carriage_address_name = False
                 self.destination_main_carriage_address_code = False
-                self.destination_main_carriage_address_country_id = False  if self.destination_main_carriage_country_id == False else self.destination_main_carriage_country_id.id
+                self.destination_main_carriage_address_country_id = False if self.destination_main_carriage_country_id == False else self.destination_main_carriage_country_id.id
                 self.destination_main_carriage_address_state_id = False
                 self.destination_main_carriage_address_city_id = False
                 self.destination_main_carriage_address_zip_code = False
@@ -709,8 +760,7 @@ class ShipmentOrder(models.Model):
                 self.destination_main_carriage_address_street3 = False
                 self.destination_main_carriage_address_save_option = False
 
-
-    #reset origin_pickup_address_id based on origin_pickup_country_id
+    # reset origin_pickup_address_id based on origin_pickup_country_id
     @api.onchange('origin_pickup_country_id')
     def _onchange_origin_pickup_country_id(self):
         self.origin_pickup_address_id = False
@@ -724,8 +774,8 @@ class ShipmentOrder(models.Model):
         self.origin_pickup_address_street2 = False
         self.origin_pickup_address_street3 = False
         self.origin_pickup_address_save_option = False
-    
-    #update origin pickup address
+
+    # update origin pickup address
     @api.onchange('origin_pickup_address_id')
     def _onchange_origin_pickup_address_id(self):
         if self.origin_pickup_address_id:
@@ -740,17 +790,17 @@ class ShipmentOrder(models.Model):
             self.origin_pickup_address_street3 = self.origin_pickup_address_id.street3
             self.origin_pickup_address_save_option = False
         else:
-            #self.origin_pickup_address_name = False
-            #self.origin_pickup_address_code = False
+            # self.origin_pickup_address_name = False
+            # self.origin_pickup_address_code = False
             self.origin_pickup_address_country_id = False if self.origin_pickup_country_id == False else self.origin_pickup_country_id.id
-            #self.origin_pickup_address_state_id = False
-            #self.origin_pickup_address_city_id = False
-            #self.origin_pickup_address_zip_code = False
-            #self.origin_pickup_address_street = False
-            #self.origin_pickup_address_street2 = False
-            #self.origin_pickup_address_street3 = False
+            # self.origin_pickup_address_state_id = False
+            # self.origin_pickup_address_city_id = False
+            # self.origin_pickup_address_zip_code = False
+            # self.origin_pickup_address_street = False
+            # self.origin_pickup_address_street2 = False
+            # self.origin_pickup_address_street3 = False
 
-    #reset destination_delivery_address_id based on destination_delivery_country_id
+    # reset destination_delivery_address_id based on destination_delivery_country_id
     @api.onchange('destination_delivery_country_id')
     def _onchange_destination_delivery_country_id(self):
         self.destination_delivery_address_id = False
@@ -764,8 +814,8 @@ class ShipmentOrder(models.Model):
         self.destination_delivery_address_street2 = False
         self.destination_delivery_address_street3 = False
         self.destination_delivery_address_save_option = False
-    
-    #update delivery address
+
+    # update delivery address
     @api.onchange('destination_delivery_address_id')
     def _onchange_destination_delivery_address_id(self):
         if self.destination_delivery_address_id:
@@ -780,22 +830,22 @@ class ShipmentOrder(models.Model):
             self.destination_delivery_address_street3 = self.destination_delivery_address_id.street3
             self.destination_delivery_address_save_option = False
         else:
-            #self.destination_delivery_address_name = False
-            #self.destination_delivery_address_code = False
+            # self.destination_delivery_address_name = False
+            # self.destination_delivery_address_code = False
             self.destination_delivery_address_country_id = False if self.destination_delivery_country_id == False else self.destination_delivery_country_id.id
-            #self.destination_delivery_address_state_id = False
-            #self.destination_delivery_address_city_id = False
-            #self.destination_delivery_address_zip_code = False
-            #self.destination_delivery_address_street = False
-            #self.destination_delivery_address_street2 = False
-            #self.destination_delivery_address_street3 = False
-    
-    #update address_id on save_option
+            # self.destination_delivery_address_state_id = False
+            # self.destination_delivery_address_city_id = False
+            # self.destination_delivery_address_zip_code = False
+            # self.destination_delivery_address_street = False
+            # self.destination_delivery_address_street2 = False
+            # self.destination_delivery_address_street3 = False
+
+    # update address_id on save_option
     @api.onchange('origin_main_carriage_address_save_option')
     def _onchange_origin_main_carriage_address_save_option(self):
         if self.origin_main_carriage_address_save_option:
             self.origin_main_carriage_address_id = False
-    
+
     @api.onchange('destination_main_carriage_address_save_option')
     def _onchange_destination_main_carriage_address_save_option(self):
         if self.destination_main_carriage_address_save_option:
@@ -811,40 +861,40 @@ class ShipmentOrder(models.Model):
         if self.destination_delivery_address_save_option:
             self.destination_delivery_address_id = False
 
-    
-            
     def create_new_address(self):
         return {
-        #'name': self.order_id,
-        'res_model': 'logistics.freight.address',
-        'type': 'ir.actions.act_window',
-        'context': {'default_partner_id': self.customer_id.id},
-        'view_mode': 'form',
-        'view_type': 'form',
-        #'view_id': self.env.ref("pickabite.payment_form_view").id,
-        'target': 'new'
+            # 'name': self.order_id,
+            'res_model': 'logistics.freight.address',
+            'type': 'ir.actions.act_window',
+            'context': {'default_partner_id': self.customer_id.id},
+            'view_mode': 'form',
+            'view_type': 'form',
+            # 'view_id': self.env.ref("pickabite.payment_form_view").id,
+            'target': 'new'
         }
-    
-    #sale order functions
+
+    # sale order functions
     @api.depends('so_ids.order_line')
     def _get_so_ids(self):
         for record in self:
-            sale_order_lines = record.env['sale.order.line'].sudo().search([('reference_document','=',str(record._name) + ',' + str(record.id))])
-            sale_orders = sale_order_lines.order_id.filtered(lambda r: r.state in ('sale','done')) if sale_order_lines else False
+            sale_order_lines = record.env['sale.order.line'].sudo().search(
+                [('reference_document', '=', str(record._name) + ',' + str(record.id))])
+            sale_orders = sale_order_lines.order_id.filtered(
+                lambda r: r.state in ('sale', 'done')) if sale_order_lines else False
             record.so_ids = sale_orders if sale_orders else False
             record.so_ids_count = len(sale_orders) if sale_orders else False
             record.so_ids_amount_untaxed = sum(line.amount_untaxed for line in sale_orders) if sale_orders else False
             record.so_ids_amount_tax = sum(line.amount_tax for line in sale_orders) if sale_orders else False
             record.so_ids_amount_total = sum(line.amount_total for line in sale_orders) if sale_orders else False
-            
 
-            quotations = sale_order_lines.order_id.filtered(lambda r: r.state in ('draft','sent')) if sale_order_lines else False
+            quotations = sale_order_lines.order_id.filtered(
+                lambda r: r.state in ('draft', 'sent')) if sale_order_lines else False
             record.quotation_ids = quotations if quotations else False
             record.quotation_ids_count = len(quotations) if quotations else False
-            record.quotation_ids_amount_untaxed = sum(line.amount_untaxed for line in quotations) if quotations else False
+            record.quotation_ids_amount_untaxed = sum(
+                line.amount_untaxed for line in quotations) if quotations else False
             record.quotation_ids_amount_tax = sum(line.amount_tax for line in quotations) if quotations else False
             record.quotation_ids_amount_total = sum(line.amount_total for line in quotations) if quotations else False
-            
 
     def action_view_so(self):
         self.ensure_one()
@@ -852,10 +902,10 @@ class ShipmentOrder(models.Model):
             "name": "Sales Orders",
             "type": "ir.actions.act_window",
             "res_model": "sale.order",
-            "domain": [('id','in',self.so_ids.ids)],
+            "domain": [('id', 'in', self.so_ids.ids)],
             "view_mode": "tree,form,search",
-            "context": {"create":0,"delete":0},
-             }
+            "context": {"create": 0, "delete": 0},
+        }
         return result
 
     def action_view_quotations(self):
@@ -864,40 +914,44 @@ class ShipmentOrder(models.Model):
             "name": "Quotations",
             "type": "ir.actions.act_window",
             "res_model": "sale.order",
-            "domain": [('id','in',self.quotation_ids.ids)],
+            "domain": [('id', 'in', self.quotation_ids.ids)],
             "view_mode": "tree,form,search",
-            "context": {"create":0,"delete":0},
-             }
+            "context": {"create": 0, "delete": 0},
+        }
         return result
-    
 
-    #invoice & due functions
+    # invoice & due functions
     @api.depends('so_ids.order_line.invoice_lines')
     def _get_invoice_ids(self):
         for record in self:
-            invoices = record.so_ids.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
+            invoices = record.so_ids.order_line.invoice_lines.move_id.filtered(
+                lambda r: r.move_type in ('out_invoice', 'out_refund'))
             record.invoice_ids = invoices if invoices else False
             record.invoice_ids_count = len(invoices) if invoices else False
-            record.invoice_ids_amount_untaxed = sum(line.amount_untaxed_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
-            record.invoice_ids_amount_tax = sum(line.amount_tax_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
-            record.invoice_ids_amount_total = sum(line.amount_total_signed for line in invoices.filtered(lambda r: r.state =='posted')) if invoices else False
-            
-            
-            invoices_due = record.so_ids.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund') and r.amount_residual_signed > 0)
+            record.invoice_ids_amount_untaxed = sum(line.amount_untaxed_signed for line in invoices.filtered(
+                lambda r: r.state == 'posted')) if invoices else False
+            record.invoice_ids_amount_tax = sum(line.amount_tax_signed for line in
+                                                invoices.filtered(lambda r: r.state == 'posted')) if invoices else False
+            record.invoice_ids_amount_total = sum(line.amount_total_signed for line in invoices.filtered(
+                lambda r: r.state == 'posted')) if invoices else False
+
+            invoices_due = record.so_ids.order_line.invoice_lines.move_id.filtered(
+                lambda r: r.move_type in ('out_invoice', 'out_refund') and r.amount_residual_signed > 0)
             record.invoice_ids_due = invoices_due if invoices_due else False
             record.invoice_ids_due_count = len(invoices_due) if invoices_due else False
-            record.invoice_ids_due_amount_total = sum(line.amount_residual_signed for line in invoices_due.filtered(lambda r: r.state =='posted')) if invoices_due else False
-    
+            record.invoice_ids_due_amount_total = sum(line.amount_residual_signed for line in invoices_due.filtered(
+                lambda r: r.state == 'posted')) if invoices_due else False
+
     def action_view_invoices(self):
         self.ensure_one()
         result = {
             "name": "Invoices",
             "type": "ir.actions.act_window",
             "res_model": "account.move",
-            "domain": [('id','in',self.invoice_ids.ids)],
+            "domain": [('id', 'in', self.invoice_ids.ids)],
             "view_mode": "tree,form,search",
-            "context": {"create":0,"delete":0},
-             }
+            "context": {"create": 0, "delete": 0},
+        }
         return result
 
     def action_view_invoices_due(self):
@@ -906,20 +960,22 @@ class ShipmentOrder(models.Model):
             "name": "Due Invoices",
             "type": "ir.actions.act_window",
             "res_model": "account.move",
-            "domain": [('id','in',self.invoice_ids_due.ids)],
+            "domain": [('id', 'in', self.invoice_ids_due.ids)],
             "view_mode": "tree,form,search",
-            "context": {"create":0,"delete":0},
-             }
+            "context": {"create": 0, "delete": 0},
+        }
         return result
 
-
-    #sale order lines (services) functions
+    # sale order lines (services) functions
     @api.depends('so_ids.order_line')
     def _get_sol_ids(self):
         for record in self:
-            sale_order_lines = record.env['sale.order.line'].sudo().search([('reference_document','=',str(record._name) + ',' + str(record.id))])
+            sale_order_lines = record.env['sale.order.line'].sudo().search(
+                [('reference_document', '=', str(record._name) + ',' + str(record.id))])
             record.sol_ids = sale_order_lines if sale_order_lines else False
             record.sol_ids_count = len(sale_order_lines) if sale_order_lines else False
-            record.sol_ids_amount_untaxed = sum(line.price_subtotal for line in sale_order_lines) if sale_order_lines else False
+            record.sol_ids_amount_untaxed = sum(
+                line.price_subtotal for line in sale_order_lines) if sale_order_lines else False
             record.sol_ids_amount_tax = sum(line.price_tax for line in sale_order_lines) if sale_order_lines else False
-            record.sol_ids_amount_total = sum(line.price_total for line in sale_order_lines) if sale_order_lines else False
+            record.sol_ids_amount_total = sum(
+                line.price_total for line in sale_order_lines) if sale_order_lines else False

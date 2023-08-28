@@ -22,7 +22,7 @@
                 </tree>
             </field>
         </record>
-        
+
         <record id="logistics_service_order_form_view" model="ir.ui.view">
             <field name="name">logistics.service.order.form.view</field>
             <field name="model">logistics.service.order</field>
@@ -37,6 +37,6 @@
             </field>
         </record>
 
-       
+
     </data>
 </odoo>

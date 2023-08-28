@@ -3,7 +3,6 @@
     <data>
 
         <!--Actions-->
-
         <record id="logistics_freight_address_continent_act_window" model="ir.actions.act_window">
             <field name="name">Continents</field>
             <field name="res_model">logistics.freight.address.continent</field>

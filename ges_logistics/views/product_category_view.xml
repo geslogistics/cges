@@ -11,12 +11,7 @@
                         <field name="sale_order_line_workflow"/>
                     </group>
                 </xpath>
-
-                
-
             </field>
         </record>
-
-        
     </data>
 </odoo>
