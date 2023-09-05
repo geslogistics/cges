@@ -18,10 +18,10 @@
             <field name="arch" type="xml">
                 <tree>
                     <field name="name"/>
-                    <field name="date"/>
+                    <!--                    <field name="date"/>-->
                     <field name="partner_id"/>
-                    <field name="bl_awb_number"/>
-                    <field name="stages"/>
+                    <!--                    <field name="bl_awb_number"/>-->
+                    <field name="state"/>
                 </tree>
             </field>
         </record>
@@ -34,7 +34,7 @@
             <field name="arch" type="xml">
                 <form>
                     <header>
-                        <field name="stages" widget="statusbar" clickable="1"
+                        <field name="state" widget="statusbar" clickable="1"
                                statusbar_visible="draft,pre_bayan,custom_duty,final,cleared"/>
                     </header>
                     <sheet>
@@ -43,77 +43,87 @@
                                 <field name="name"/>
                             </h1>
                         </group>
-                        <group name="top">
+                        <group>
                             <group string="Customer Details">
-                                <field name="partner_id" widget="res_partner_many2one" placeholder="Customer..."
-                                       context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
-                                       options='{"always_reload": True,"no_quick_create": True, "no_create_edit": True}'/>
-                                <field name="company_currency_id" invisible="1"/>
-                                <field name="customer_ref"/>
+                                <field name="create_date" string="Creation Date"/>
+                                <field name="partner_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="customer_reference"/>
+                                <field name="billing_type"/>
                             </group>
-                            <group>
-                                <field name="date"/>
-                                <field name="bill_types" widget="radio" options="{'horizontal': true}"/>
-                                <field name="bl_awb_number"/>
+                            <group string="Customs Shipment Details">
+                                <field name="transport" widget="radio" required="1" options="{'horizontal': true}"/>
+                                <field name="direction" widget="radio" required="1" options="{'horizontal': true}"/>
+                                <field name="shipment_type_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="commodity_type"/>
+                                <field name="commercial_invoice" filename="commercial_invoice_file_name"
+                                       attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="bl_number" attrs="{'invisible':[('transport','!=','ocean')],'required':[('transport','=','ocean')]}"/>
+                                <field name="awb_number" attrs="{'invisible':[('transport','!=','air')],'required':[('transport','=','air')]}"/>
+                                <field name="lwb_number" attrs="{'invisible':[('transport','!=','road')],'required':[('transport','=','road')]}"/>
                             </group>
                         </group>
                         <group>
                             <group string="Shipment Details">
-                                <field name="shipment_type" required="1" widget="radio" options="{'horizontal': true}"/>
-                                <field name="shipper_id" widget="res_partner_many2one" placeholder="Shipper..."
-                                       context="{'res_partner_search_mode': 'customer', 'show_address': 1, 'show_vat': True}"
-                                       options='{"always_reload": True,"no_quick_create": True, "no_create_edit": True}'/>
-                                <field name="shipper_date"/>
+                                <field name="shipper_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="consignee_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="shipment_doc_received_date"/>
+                                <field name="broker_id" options='{"no_open": True, "no_create": True}'/>
                             </group>
                             <group string="Vessel Information">
                                 <field name="vessel_name"/>
-                                <field name="vessel_discharge_date"/>
                                 <field name="vessel_expected_arrival_date"/>
-                                <field name="vessel_arrival_date"/>
+                                <field name="vessel_arrival_date"
+                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import')]}"/>
+                                <field name="manifest_date"/>
+                                <field name="vessel_discharge_date"
+                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import')]}"/>
                             </group>
                         </group>
                         <group>
-                            <group string="SADAD">
-                                <field name="saddad_date"/>
-                                <field name="sadad_no"/>
-                                <field name="sadad_amount"/>
-                                <field name="moved_sadad"/>
+                            <group string="Clearance Stage">
+                                <field name="pre_customs_dec_no"/>
+                                <field name="pre_customs_dec_date"/>
+                                <field name="pre_customs_dec_attachment" filename="pre_customs_dec_attachment_filename"/>
+                                <field name="customs_duty_payment_notification_date"
+                                       attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="customs_duty_payment_reference_number"
+                                       attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="customs_duty_payment_amount"
+                                       attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="customs_duty_payment_date"
+                                       attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="final_customs_declaration_date"/>
+                                <field name="final_customs_clearance_attachment" filename="final_customs_clearance_attachment_filename"/>
+                                <field name="broker_transportation_order_date"/>
                             </group>
-                            <group string="DO">
-                                <field name="do_num"/>
-                                <field name="do_date"/>
-                                <field name="do_attach" filename="do_filename"/>
+                            <group string="Post Clearance Stage">
+                                <field name="do_number" attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="do_collection_date" attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="do_attachment" filename="do_attachment_file_name" attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="loading_card_date" attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="pd_ce_payment_date" attrs="{'invisible':[('direction','!=','import')]}"/>
+                                <field name="shipment_in_port_date" attrs="{'invisible':[('direction','!=','export')]}"/>
+                                <field name="ok_to_load_date" attrs="{'invisible':[('direction','!=','export')]}"/>
                             </group>
                         </group>
                         <group>
-                            <group string="Bayan">
-                                <field name="bayan_no"/>
-                                <field name="pre_bayan_date"/>
-                                <field name="bayan_attach" filename="bayan_filename"/>
-                                <field name="fin_bayan_date"/>
-                                <field name="final_attach" filename="fb_filename"/>
-                            </group>
                             <group string="Demurrage and Detention Details">
-                                <field name="demurrage"/>
+                                <field name="demurrage_date" attrs="{'invisible':[('direction','!=','import')]}"/>
                                 <field name="free_time_days"/>
                                 <field name="detention_date"/>
                             </group>
-                        </group>
-                        <group string="Other Informations">
-                            <group>
+                            <group string="Additional Customs Information">
                                 <field name="eta"/>
+                                <field name="etd"/>
                                 <field name="inspection_date"/>
                                 <field name="duty_paid_date"/>
                                 <field name="gate_pass_date"/>
-                                <field name="port_dues_payment_date"/>
-                            </group>
-                            <group>
-                                <field name="etd"/>
-                                <field name="des_Port"
-                                       options='{"always_reload": True,"no_quick_create": True, "no_create_edit": True}'/>
-                                <field name="lan_Port"
-                                       options='{"always_reload": True,"no_quick_create": True, "no_create_edit": True}'/>
-                                <field name="remarks" widget="text"/>
+                                <field name="pd_payment_date"/>
+                                <field name="discharging_port_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="landing_port_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="remarks"/>
+                                <field name="clearance_time_taken"/>
+                                <field name="clearance_delay_reason"/>
                             </group>
                         </group>
 
@@ -134,13 +144,13 @@
                 <search string="Customs">
                     <field name="name" string="Name"/>
                     <field name="partner_id" string="Customer" group="1" context="{'group_by': 'partner_id'}"/>
-                    <field name="bl_awb_number" string="BL/AWB Number"/>
-                    <field name="customer_ref" string="Customer Reference"/>
-                    <field name="sadad_no" string="SADAD"/>
-                    <field name="do_num"/>
-                    <field name="sadad_no"/>
-                    <field name="bayan_no"/>
-                    <field name="shipper_id" string="Shipper"/>
+                    <!--                    <field name="bl_awb_number" string="BL/AWB Number"/>-->
+                    <!--                    <field name="customer_ref" string="Customer Reference"/>-->
+                    <!--                    <field name="sadad_no" string="SADAD"/>-->
+                    <!--                    <field name="do_num"/>-->
+                    <!--                    <field name="sadad_no"/>-->
+                    <!--                    <field name="bayan_no"/>-->
+                    <!--                    <field name="shipper_id" string="Shipper"/>-->
                 </search>
             </field>
         </record>

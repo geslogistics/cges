@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
+        <record id="product_category_form_ges" model="ir.ui.view">
+            <field name="name">product.category.form.ges</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+                <xpath expr="//sheet/group[@name='first']" position="after">
+                    <group name="ges_cat">
+                        <field name="sale_order_line_workflow"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
         <!-- Views -->
         <record id="product_template_form_view_logistics" model="ir.ui.view">
             <field name="name">product.template.form.view.logistics</field>
@@ -143,5 +156,20 @@
             <field name="domain">[("is_logistics","=",True)]</field>
         </record>
 
+        <record id="view_order_form_logistics" model="ir.ui.view">
+            <field name="name">logistics.view.order.form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree/field[@name='product_template_id']" position="after">
+                    <button name="select_reference_document" type="object" icon="fa-search" string=""
+                            class="btn-primary"/>
+                    <button name="initiate_reference_document" type="object" icon="fa-magic" string=""
+                            class="btn-primary"/>
+                    <field name="reference_document" force_save="1"
+                           options="{'no_quick_create': True, 'no_create': True}"/>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>

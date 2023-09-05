@@ -18,12 +18,8 @@
         # Data
         'data/logistics_sequence_data.xml',
         # Views
-        'views/product_category_view.xml',
-        'views/product_template_view.xml',
-        'views/sale_order_view.xml',
-        'views/logistics_freight_address_view.xml',
-        'views/logistics_freight_port_view.xml',
-        'views/logistics_freight_incoterms_view.xml',
+        'views/inherited_views.xml',
+        'views/logistics_configurations.xml',
         'views/logistics_shipment_order_view.xml',
         'views/logistics_transport_order_view.xml',
         'views/logistics_storage_order_view.xml',
