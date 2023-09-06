@@ -1,4 +1,8 @@
+# -*- coding: utf-8 -*-
+
 from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError, UserError
+import re
 
 
 class ResPartner(models.Model):
@@ -109,6 +113,22 @@ class ShipmentPackageLine(models.Model):
     _name = 'shipment.package.line'
     _description = 'Freight Package Line'
     _rec_name = 'package'
+
+    @api.onchange('name')
+    def container_no_check_onchange(self):
+        for rec in self:
+            if rec.name:
+                if len(rec.name) > 11:
+                    raise ValidationError(
+                        f"The container number exceeds the maximum length (11 characters): {rec.name}"
+                    )
+                if not re.match('^[A-Z]{4}[0-9]{7,}$', rec.name.upper()):
+                    raise ValidationError(
+                        f"You have Entered a Wrong Container Number or Format: {rec.name.upper()}\n"
+                        "Format is ABCD1234567\n"
+                        "First Four Characters Must be Alphabet and Last Seven Characters Must be Numeric"
+                    )
+                rec.name = rec.name.upper()
 
     name = fields.Char(string='Container Number', required=True)
     package_type = fields.Selection([('item', 'Box / Cargo'), ('container', 'Container / Box')], string="Package Type")
