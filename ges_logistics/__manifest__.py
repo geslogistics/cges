@@ -11,7 +11,7 @@
     'company': 'GES Logistics',
     'maintainer': 'GES Logistics',
     'website': "https://www.geslogistics.com",
-    'depends': ['product', 'sale', 'tk_freight'],
+    'depends': ['product', 'sale', 'tk_freight', 'hr_payroll'],
     'data': [
         # Security
         'security/ir.model.access.csv',

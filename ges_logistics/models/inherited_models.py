@@ -3,6 +3,12 @@
 from odoo import models, fields, api, _
 
 
+class HRContract(models.Model):
+    _inherit = 'hr.contract'
+
+    air_ticket_allowance = fields.Monetary(string='Air Ticket Allowance')
+
+
 class SaleOrderLine(models.Model):
     _inherit = ['sale.order.line']
 

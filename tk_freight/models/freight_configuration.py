@@ -114,22 +114,6 @@ class ShipmentPackageLine(models.Model):
     _description = 'Freight Package Line'
     _rec_name = 'package'
 
-    @api.onchange('name')
-    def container_no_check_onchange(self):
-        for rec in self:
-            if rec.name:
-                if len(rec.name) > 11:
-                    raise ValidationError(
-                        f"The container number exceeds the maximum length (11 characters): {rec.name}"
-                    )
-                if not re.match('^[A-Z]{4}[0-9]{7,}$', rec.name.upper()):
-                    raise ValidationError(
-                        f"You have Entered a Wrong Container Number or Format: {rec.name.upper()}\n"
-                        "Format is ABCD1234567\n"
-                        "First Four Characters Must be Alphabet and Last Seven Characters Must be Numeric"
-                    )
-                rec.name = rec.name.upper()
-
     name = fields.Char(string='Container Number', required=True)
     package_type = fields.Selection([('item', 'Box / Cargo'), ('container', 'Container / Box')], string="Package Type")
     transport = fields.Selection(([('air', 'Air'), ('ocean', 'Ocean'), ('land', 'Land')]), string='Transport')
@@ -171,6 +155,22 @@ class ShipmentPackageLine(models.Model):
     length = fields.Float(string='Length(cm)')
     width = fields.Float(string='Width(cm)')
 
+    @api.onchange('name')
+    def container_no_check_onchange(self):
+        for rec in self:
+            if rec.name:
+                if len(rec.name) > 11:
+                    raise ValidationError(
+                        f"The container number exceeds the maximum length (11 characters): {rec.name}"
+                    )
+                if not re.match('^[A-Z]{4}[0-9]{7,}$', rec.name.upper()):
+                    raise ValidationError(
+                        f"You have Entered a Wrong Container Number or Format: {rec.name.upper()}\n"
+                        "Format is ABCD1234567\n"
+                        "First Four Characters Must be Alphabet and Last Seven Characters Must be Numeric"
+                    )
+                rec.name = rec.name.upper()
+
     @api.onchange('package')
     def _onchange_package_dimension(self):
         for rec in self:
@@ -185,7 +185,7 @@ class ShipmentPackageLine(models.Model):
     def onchange_package_id(self):
         for line in self:
             if line.package_type == "item":
-                if line.shipment_id.transport == 'air':
+                if line.shipment_id.transport == 'air' or line.customs_id.transport == 'air':
                     return {'domain': {'package': [('air', '=', True), ('item', '=', True), ('active', '=', True)]}}
                 if line.shipment_id.transport == 'ocean':
                     return {'domain': {'package': [('ocean', '=', True), ('item', '=', True), ('active', '=', True)]}}

@@ -49,18 +49,16 @@
                                statusbar_visible="draft,docs_received,pre_clearance,clearance,post_clearance"/>
                     </header>
                     <sheet>
-                        <group>
+                        <field name="active" invisible="1"/>
+                        <widget name="web_ribbon" title="Archived" bg_color="bg-danger"
+                                attrs="{'invisible': [('active', '=', True)]}"
+                                modifiers="{'invisible': [['active', '=', true]]}"/>
+                        <div class="oe_title mb12">
                             <h1>
-                                <field name="name" readonly="1"/>
+                                <field class="text-break" name="name" default_focus="1" readonly="1"/>
                             </h1>
-                        </group>
+                        </div>
                         <group>
-                            <group string="Customer Details">
-                                <field name="create_date" string="Creation Date"/>
-                                <field name="partner_id" options='{"no_open": True, "no_create": True}'/>
-                                <field name="customer_reference"/>
-                                <field name="billing_type"/>
-                            </group>
                             <group string="Customs Shipment Details">
                                 <field name="transport" widget="radio" required="1" options="{'horizontal': true}"/>
                                 <field name="direction" widget="radio" required="1" options="{'horizontal': true}"/>
@@ -72,6 +70,12 @@
                                 <field name="awb_number" attrs="{'invisible':[('transport','!=','air')],'required':[('transport','=','air')]}"/>
                                 <field name="lwb_number" attrs="{'invisible':[('transport','!=','road')],'required':[('transport','=','road')]}"/>
                             </group>
+                            <group string="Customer Details">
+                                <field name="create_date" string="Creation Date"/>
+                                <field name="partner_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="customer_reference"/>
+                                <field name="billing_type"/>
+                            </group>
                         </group>
                         <group>
                             <group string="Shipment Details">
@@ -81,16 +85,38 @@
                                 <field name="broker_id" options='{"no_open": True, "no_create": True}'/>
                                 <field name="discharging_port_id" options='{"no_open": True, "no_create": True}'/>
                                 <field name="landing_port_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="number_of_containers" readonly="1"/>
+                                <field name="number_of_packages" readonly="1"/>
                                 <field name="status" readonly="1"/>
                             </group>
-                            <group string="Vessel Information">
+                            <group attrs="{'invisible': [('transport', '!=', 'ocean')]}" string="Vessel Information">
                                 <field name="vessel_name"/>
                                 <field name="vessel_expected_arrival_date"/>
                                 <field name="vessel_arrival_date"
-                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import')]}"/>
+                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import'),('transport','in','ocean')]}"/>
                                 <field name="manifest_date"/>
-                                <field name="vessel_discharge_date"
-                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import')]}"/>
+                                <field name="discharge_date" string="Vessel Discharge Date"
+                                       attrs="{'invisible':[('direction','!=','import')],'required':[('direction','=','import'),('transport','in','ocean')]}"/>
+                            </group>
+                            <group attrs="{'invisible': [('transport', '!=', 'air')]}" string="Airline Information">
+                                <field name="airline_id" options='{"no_open": True, "no_create": True}'/>
+                                <field name="flight_number"/>
+                                <field name="flight_departure_date"/>
+                                <field name="flight_arrival_date"/>
+                                <field name="manifest_date"/>
+                                <field name="discharge_date" string="Discharge Date"/>
+                            </group>
+                            <group attrs="{'invisible': [('transport', '!=', 'road')]}" string="Truck Information">
+                                <field name="internal_external" options="{'horizontal': true}"/>
+                                <field name="fleet_id" options='{"no_open": True, "no_create": True}'
+                                       attrs="{'invisible':[('internal_external','!=','internal')]}"/>
+                                <field name="fleet_name" attrs="{'invisible':[('internal_external','!=','external')]}"/>
+                                <field name="driver_id" options='{"no_open": True, "no_create": True}'
+                                       attrs="{'invisible':[('internal_external','!=','internal')]}"/>
+                                <field name="driver_name" attrs="{'invisible':[('internal_external','!=','external')]}"/>
+                                <field name="driver_mobile_number"/>
+                                <field name="truck_departure_time"/>
+                                <field name="truck_arrival_time"/>
                             </group>
                         </group>
                         <group>
@@ -118,6 +144,8 @@
                                 <field name="pd_ce_payment_date" attrs="{'invisible':[('direction','!=','import')]}"/>
                                 <field name="shipment_in_port_date" attrs="{'invisible':[('direction','!=','export')]}"/>
                                 <field name="ok_to_load_date" attrs="{'invisible':[('direction','!=','export')]}"/>
+                                <field name="inspection_date"/>
+                                <field name="gate_pass_date"/>
                             </group>
                         </group>
                         <group>
@@ -127,10 +155,6 @@
                                 <field name="detention_date"/>
                             </group>
                             <group string="Additional Customs Information">
-                                <field name="inspection_date"/>
-                                <field name="duty_paid_date"/>
-                                <field name="gate_pass_date"/>
-                                <field name="pd_payment_date"/>
                                 <field name="remarks"/>
                                 <field name="clearance_time_taken"/>
                                 <field name="clearance_delay_reason"/>
@@ -327,9 +351,19 @@
                                 context="{'group_by':'vessel_expected_arrival_date'}"/>
                         <filter string="Vessel Arrival Date" name="vessel_arrival_date" domain="[]" context="{'group_by':'vessel_arrival_date'}"/>
                         <filter string="Manifest Date" name="manifest_date" domain="[]" context="{'group_by':'manifest_date'}"/>
-                        <filter string="Vessel Discharge Date" name="vessel_discharge_date" domain="[]"
-                                context="{'group_by':'vessel_discharge_date'}"/>
+                        <filter string="Vessel Discharge Date" name="discharge_date" domain="[]"
+                                context="{'group_by':'discharge_date'}"/>
                     </group>
+                    <separator/>
+                    <filter name="Import" string="Import" domain="[('direction','=','import')]"/>
+                    <filter name="Export" string="Export" domain="[('direction','=','export')]"/>
+                    <separator/>
+                    <filter name="Air" string="Air" domain="[('transport','=','air')]"/>
+                    <filter name="Ocean" string="Ocean" domain="[('transport','=','ocean')]"/>
+                    <filter name="Road" string="Road" domain="[('transport','=','road')]"/>
+                    <filter name="Rail" string="Rail" domain="[('transport','=','rail')]"/>
+                    <separator/>
+                    <filter name="Inactive" string="Archived" domain="[('active','=',False)]"/>
                 </search>
             </field>
         </record>
