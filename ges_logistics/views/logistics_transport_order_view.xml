@@ -29,11 +29,11 @@
                             <group>
                                 <field name="create_date" string="Creation Date"/>
                                 <field name="partner_id"/>
-                                <field name="priority"/>
+                                <field name="priority" widget="priority"/>
                                 <field name="delivery_date"/>
                             </group>
                             <group>
-                                <field name="direction"/>
+                                <field name="direction" widget="radio" options="{'horizontal': true}"/>
                                 <field name="port_id"/>
                                 <field name="shipment_type_id"/>
                             </group>
@@ -46,35 +46,41 @@
                             <group>
                                 <field name="make_empty_collection"/>
                                 <field name="make_empty_return_collection"/>
-<!--                                <field name="breakdown"/>-->
+                                <field name="breakdown"/>
                             </group>
                         </group>
                         <notebook>
                             <page string="Transport Information">
                                 <group>
-                                    <group>
+                                    <group string="Transportation Details">
                                         <field name="transportation_mode"/>
                                         <field name="container_number"/>
-                                        <field name="vendor_id"/>
-                                        <field name="fleet_id"/>
-                                        <field name="fleet_name"/>
+                                        <field name="vendor_id" options='{"no_open": True, "no_create": True}'
+                                               attrs="{'invisible': [('transportation_mode','!=','external')]}"/>
+                                        <field name="fleet_id" attrs="{'invisible': [('transportation_mode','!=','internal')]}"
+                                               options='{"no_open": True, "no_create": True}'/>
+                                        <field name="fleet_name" attrs="{'invisible': [('transportation_mode','!=','external')]}"/>
                                     </group>
-                                    <group>
-                                        <field name="driver_id"/>
-                                        <field name="driver_name"/>
+                                    <group string="Driver Details">
+                                        <field name="driver_id" attrs="{'invisible': [('transportation_mode','!=','internal')]}"
+                                               options='{"no_open": True, "no_create": True}'/>
+                                        <field name="driver_name" attrs="{'invisible': [('transportation_mode','!=','external')]}"/>
                                         <field name="driver_mobile_number"/>
-                                        <field name="trip_money_vendor_charges"/>
+                                        <field name="trip_money_vendor_charges" attrs="{'invisible': [('transportation_mode','!=','external')]}"
+                                               string="Charges"/>
+                                        <field name="trip_money_vendor_charges" attrs="{'invisible': [('transportation_mode','!=','internal')]}"
+                                               string="Trip Money"/>
                                     </group>
                                 </group>
                                 <group>
-                                    <group>
-                                        <field name="loading_city_id"/>
-                                        <field name="destination_city_id"/>
+                                    <group string="Trip Schedule">
+                                        <field name="loading_city_id" options='{"no_open": True, "no_create": True}'/>
+                                        <field name="destination_city_id" options='{"no_open": True, "no_create": True}'/>
                                         <field name="fleet_type"/>
                                         <field name="origin_loading_date"/>
                                         <field name="destination_arrival_date"/>
                                     </group>
-                                    <group>
+                                    <group string="Other Dates">
                                         <field name="return_date"/>
                                         <field name="stuffing_date"/>
                                         <field name="waybill_date"/>
@@ -82,86 +88,145 @@
                                     </group>
                                 </group>
                                 <group>
-                                    <group>
+                                    <group string="Receiver">
                                         <field name="receiver_name"/>
                                     </group>
-                                    <group>
+                                    <group string="Receiver Contact">
                                         <field name="receiver_contact"/>
                                     </group>
                                 </group>
-
                             </page>
                             <page string="Pull Out Information" attrs="{'invisible': [('make_pullout','!=',True)]}">
                                 <group>
-                                    <group>
-                                        <field name="pullout_mode"/>
-                                        <field name="pullout_vendor_id"/>
-                                        <field name="pullout_fleet_id"/>
-                                        <field name="pullout_fleet_name"/>
+                                    <group string="Pull Out Details">
+                                        <field name="pullout_mode" attrs="{'required': [('make_pullout','=',True)]}"/>
+                                        <field name="pullout_vendor_id"
+                                               attrs="{'invisible': [('pullout_mode','!=','external')],'required': [('pullout_mode','in','external')]}"
+                                               options='{"no_open": True, "no_create": True}'/>
+                                        <field name="pullout_fleet_id"
+                                               attrs="{'invisible': [('pullout_mode','!=','internal')],'required': [('pullout_mode','in','internal')]}"
+                                               options='{"no_open": True, "no_create": True}'/>
+                                        <field name="pullout_fleet_name"
+                                               attrs="{'invisible': [('pullout_mode','!=','external')],'required': [('pullout_mode','in','external')]}"/>
                                     </group>
-                                    <group>
-                                        <field name="pullout_driver_id"/>
-                                        <field name="pullout_driver_name"/>
-                                        <field name="pullout_driver_mobile_number"/>
-                                        <field name="pullout_trip_money_vendor_charges"/>
-                                        <field name="pullout_status"/>
+                                    <group string="Driver Details">
+                                        <field name="pullout_driver_id"
+                                               attrs="{'invisible': [('pullout_mode','!=','internal')],'required': [('pullout_mode','in','internal')]}"
+                                               options='{"no_open": True, "no_create": True}'/>
+                                        <field name="pullout_driver_name"
+                                               attrs="{'invisible': [('pullout_mode','!=','external')],'required': [('pullout_mode','in','external')]}"/>
+                                        <field name="pullout_driver_mobile_number" attrs="{'required': [('make_pullout','=',True)]}"/>
+                                        <field name="pullout_trip_money_vendor_charges"
+                                               attrs="{'required': [('make_pullout','=',True)],'readonly': [('pullout_status','!=','draft')]}"/>
+                                        <field name="pullout_status" readonly="1"/>
                                     </group>
                                 </group>
                                 <group>
-                                    <group>
-                                        <field name="pullout_complete_date"/>
-                                        <field name="pullout_type"/>
+                                    <group string="Schedule">
+                                        <field name="pullout_schedule_date" attrs="{'required': [('make_pullout','=',True)]}"/>
+                                        <field name="pullout_complete_date" readonly="1"/>
+                                        <field name="pullout_type" attrs="{'required': [('make_pullout','=',True)]}"/>
                                     </group>
-                                    <group>
-                                        <field name="self_pullout_reason"/>
-                                        <field name="pullout_port_id"/>
+                                    <group string="Other Details">
+                                        <field name="self_pullout_reason"
+                                               attrs="{'invisible': [('pullout_type','!=','customer')],'required': [('pullout_type','in','customer')]}"/>
+                                        <field name="pullout_port_id" attrs="{'required': [('make_pullout','=',True)]}"/>
                                     </group>
                                 </group>
-
+                                <group>
+                                    <button type="object" name="pullout_trip" string="Pay Trip Money" class="btn btn-primary"
+                                            attrs="{'invisible': ['|', ('pullout_mode', '!=', 'external'), ('pullout_status', '!=', 'draft')]}"/>
+                                    <button type="object" name="pullout_trip" string="Pay Charges" class="btn btn-primary"
+                                            attrs="{'invisible': ['|', ('pullout_mode', '!=', 'external'), ('pullout_status', '!=', 'draft')]}"/>
+                                    <button type="object" name="pullout_completed" string="PullOut Completed" class="btn btn-primary"
+                                            attrs="{'invisible': [('pullout_status', '!=', 'inprogress')]}"/>
+                                </group>
                             </page>
                             <page string="Empty Collection" attrs="{'invisible': [('make_empty_collection','!=',True)]}">
-                                <group>
+                                <group string="Empty Collection Details">
                                     <group>
-                                        <field name="empty_collection_mode"/>
-                                        <field name="empty_collection_vendor_id"/>
-                                        <field name="empty_collection_fleet_id"/>
-                                        <field name="empty_collection_fleet_name"/>
+                                        <group string="Collection Mode">
+                                            <field name="empty_collection_mode" attrs="{'required': [('make_empty_collection','=',True)]}"/>
+                                        </group>
+                                        <group string="Fleet" attrs="{'invisible': [('empty_collection_mode','!=','internal')]}">
+                                            <field name="empty_collection_fleet_id" options='{"no_open": True, "no_create": True}'
+                                                   attrs="{'required': [('empty_collection_mode','in','internal')]}"/>
+                                        </group>
+                                        <group string="Vendor &amp; Fleet" attrs="{'invisible': [('empty_collection_mode','!=','external')]}">
+                                            <field name="empty_collection_vendor_id" options='{"no_open": True, "no_create": True}'
+                                                   attrs="{'required': [('empty_collection_mode','in','external')]}"/>
+                                            <field name="empty_collection_fleet_id" options='{"no_open": True, "no_create": True}'
+                                                   attrs="{'required': [('empty_collection_mode','in','external')]}"/>
+                                        </group>
                                     </group>
                                     <group>
-                                        <field name="empty_collection_driver_id"/>
-                                        <field name="empty_collection_driver_name"/>
-                                        <field name="empty_collection_driver_mobile_number"/>
-                                        <field name="empty_collection_trip_money_vendor_charges"/>
-                                        <field name="empty_collection_status"/>
-                                        <field name="empty_collection_date"/>
+                                        <group string="Driver Details">
+                                            <field name="empty_collection_driver_id"
+                                                   attrs="{'invisible': [('empty_collection_mode','!=','internal')],'required': [('empty_collection_mode','in','internal')]}"
+                                                   options='{"no_open": True, "no_create": True}'/>
+                                            <field name="empty_collection_driver_name"
+                                                   attrs="{'invisible': [('empty_collection_mode','!=','external')],'required': [('empty_collection_mode','in','external')]}"/>
+                                            <field name="empty_collection_driver_mobile_number"/>
+                                        </group>
+                                        <group string="Charges &amp; Status">
+                                            <field name="empty_collection_trip_money_vendor_charges"
+                                                   attrs="{'required': [('make_empty_collection','=',True)],'readonly': [('empty_collection_status','!=','draft')]}"/>
+                                            <field name="empty_collection_status" readonly="1"/>
+                                        </group>
+                                    </group>
+                                    <group string="Date">
+                                        <field name="empty_collection_scheduled_date" attrs="{'required': [('make_empty_collection','=',True)]}"/>
+                                        <field name="empty_collection_date" readonly="1"/>
+                                    </group>
+                                    <group string="Actions">
+                                        <button type="object" name="ec_trip" string="Pay Trip Money" class="btn btn-primary"
+                                                attrs="{'invisible': ['|', ('empty_collection_mode', '!=', 'internal'), ('empty_collection_status', '!=', 'draft')]}"/>
+                                        <button type="object" name="ec_trip" string="Pay Charges" class="btn btn-primary"
+                                                attrs="{'invisible': ['|', ('empty_collection_mode', '!=', 'external'), ('empty_collection_status', '!=', 'draft')]}"/>
+                                        <button type="object" name="ec_completed" string="Empty Collection Completed" class="btn btn-primary"
+                                                attrs="{'invisible': [('empty_collection_status', '!=', 'inprogress')]}"/>
                                     </group>
                                 </group>
                             </page>
                             <page string="Empty Return Collection" attrs="{'invisible': [('make_empty_return_collection','!=',True)]}">
-                                <group>
-                                    <group>
+                                <group string="Empty Return Collection Details">
+                                    <group string="Collection Mode">
                                         <field name="erc_mode"/>
-                                        <field name="erc_vendor_id"/>
-                                        <field name="erc_fleet_id"/>
-                                        <field name="erc_fleet_name"/>
                                     </group>
-                                    <group>
-                                        <field name="erc_driver_id"/>
-                                        <field name="erc_driver_name"/>
+                                    <group attrs="{'invisible': [('erc_mode','!=','internal')], 'required': [('erc_mode','=','internal')]}">
+                                        <group string="Internal Details">
+                                            <field name="erc_fleet_id" options='{"no_open": True, "no_create": True}'/>
+                                            <field name="erc_driver_id" options='{"no_open": True, "no_create": True}'/>
+                                        </group>
+                                    </group>
+                                    <group attrs="{'invisible': [('erc_mode','!=','external')],'required': [('erc_mode','=','external')]}">
+                                        <group string="External Details">
+                                            <field name="erc_fleet_name"/>
+                                            <field name="erc_driver_name"/>
+                                            <field name="erc_vendor_id" options='{"no_open": True, "no_create": True}'/>
+                                        </group>
+                                    </group>
+                                    <group string="Other Details">
                                         <field name="erc_driver_mobile_number"/>
                                         <field name="erc_trip_money_vendor_charges"/>
-                                        <field name="erc_status"/>
+                                        <field name="erc_scheduled_date"/>
                                         <field name="erc_date"/>
+                                        <field name="erc_status"/>
                                     </group>
                                 </group>
                             </page>
                         </notebook>
                     </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>
 
-<!--        Transportation Order Search View Defined Here-->
+        <!--        Transportation Order Search View Defined Here-->
         <record id="logistics_transport_order_search_view" model="ir.ui.view">
             <field name="name">logistics.transport.order.search.view</field>
             <field name="model">logistics.transport.order</field>
