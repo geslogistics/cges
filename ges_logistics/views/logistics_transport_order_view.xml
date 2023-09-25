@@ -197,6 +197,7 @@
                                         <group string="Internal Details">
                                             <field name="erc_fleet_id" options='{"no_open": True, "no_create": True}'/>
                                             <field name="erc_driver_id" options='{"no_open": True, "no_create": True}'/>
+                                            <field name="erc_driver_mobile_number"/>
                                         </group>
                                     </group>
                                     <group attrs="{'invisible': [('erc_mode','!=','external')],'required': [('erc_mode','=','external')]}">
@@ -204,10 +205,10 @@
                                             <field name="erc_fleet_name"/>
                                             <field name="erc_driver_name"/>
                                             <field name="erc_vendor_id" options='{"no_open": True, "no_create": True}'/>
+                                            <field name="erc_driver_mobile_number"/>
                                         </group>
                                     </group>
                                     <group string="Other Details">
-                                        <field name="erc_driver_mobile_number"/>
                                         <field name="erc_trip_money_vendor_charges"/>
                                         <field name="erc_scheduled_date"/>
                                         <field name="erc_date"/>
